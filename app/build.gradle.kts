@@ -2,6 +2,9 @@ plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.android)
     alias(libs.plugins.dagger.hilt.google)
+
+    alias(libs.plugins.kotlin.serialization)
+    alias(libs.plugins.compose.compiler)
     kotlin("kapt")
 }
 
@@ -66,6 +69,7 @@ dependencies {
     implementation(libs.hilt.compiler)
     implementation(libs.hilt.navigation.compose)
     kapt(libs.hilt.compiler)
+    kapt(libs.hilt.androix.compiler)
 
     implementation(libs.retrofit)
     implementation(libs.retrofit.gson)
@@ -80,6 +84,8 @@ dependencies {
     implementation(libs.navigation.compose)
 
     implementation(libs.datastore.preferences)
+
+    implementation(libs.kotlin.serialization)
 
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)

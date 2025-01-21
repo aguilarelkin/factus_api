@@ -1,10 +1,14 @@
 package com.factus.app.data.network
 
+import android.content.Context
+import com.factus.app.data.RepositoryDataStoreImpl
 import com.factus.app.data.RepositoryLoginImpl
+import com.factus.app.domain.repository.DataStoreRepository
 import com.factus.app.domain.repository.LoginRepository
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
+import dagger.hilt.android.qualifiers.ApplicationContext
 import dagger.hilt.components.SingletonComponent
 import okhttp3.OkHttpClient
 import okhttp3.logging.HttpLoggingInterceptor
@@ -49,8 +53,19 @@ object NetworkModule {
     }
 
     @Provides
-    fun provideProductRepository(loginApiService: LoginApiService): LoginRepository {
-        return RepositoryLoginImpl(loginApiService)
+    fun provideProductRepository(
+        loginApiService: LoginApiService,
+        dataStoreRepository: DataStoreRepository
+    ): LoginRepository {
+        return RepositoryLoginImpl(loginApiService, dataStoreRepository)
     }
 
+    /**
+     * Provide DataStore
+     */
+    @Provides
+    @Singleton
+    fun provideDataStoreManager(@ApplicationContext context: Context): DataStoreRepository {
+        return RepositoryDataStoreImpl(context)
+    }
 }

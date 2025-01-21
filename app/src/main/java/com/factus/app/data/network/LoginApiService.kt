@@ -17,4 +17,13 @@ interface LoginApiService {
         @Part("username") username: RequestBody,
         @Part("password") password: RequestBody
     ): TokenResponse
+
+    @Multipart
+    @POST("/oauth/token")
+    suspend fun refreshToken(
+        @Part("grant_type") grantType: RequestBody,
+        @Part("client_id") clientId: RequestBody,
+        @Part("client_secret") clientSecret: RequestBody,
+        @Part("refresh_token") refreshToken: RequestBody
+    ): TokenResponse
 }

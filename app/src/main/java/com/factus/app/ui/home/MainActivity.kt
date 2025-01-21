@@ -6,11 +6,21 @@ import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.systemBarsPadding
 import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.tooling.preview.Preview
+import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.navigation.NavBackStackEntry
+import androidx.navigation.NavHostController
+import androidx.navigation.compose.NavHost
+import androidx.navigation.compose.composable
+import androidx.navigation.compose.rememberNavController
+import com.factus.app.ui.login.Login
+import com.factus.app.ui.login.LoginViewModel
+import com.factus.app.ui.navigation.RouteFactus
 import com.factus.app.ui.theme.FactusTheme
 import dagger.hilt.android.AndroidEntryPoint
 
@@ -21,30 +31,44 @@ class MainActivity : ComponentActivity() {
         enableEdgeToEdge()
         setContent {
             FactusTheme {
-                Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
-                    Greeting(
-                        name = "Android",
-                        modifier = Modifier.padding(innerPadding)
+                Scaffold(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .systemBarsPadding()
+                ) { innerPadding ->
+                    MainNavigation(
+                        Modifier.padding(innerPadding)
                     )
                 }
             }
         }
     }
-}
 
-@Composable
-fun Greeting(name: String, modifier: Modifier = Modifier) {
+    @Composable
+    fun MainNavigation(modifier: Modifier) {
+        val navController = rememberNavController()
+        NavigationHost(navController = navController, modifier)
+    }
 
-    Text(
-        text = "Hello $name!",
-        modifier = modifier
-    )
-}
+    @Composable
+    fun NavigationHost(navController: NavHostController, modifier: Modifier) {
+        val loginViewModel = hiltViewModel<LoginViewModel>()
 
-@Preview(showBackground = true)
-@Composable
-fun GreetingPreview() {
-    FactusTheme {
-        Greeting("Android")
+        val uiState by loginViewModel.loginState.collectAsState()
+
+        /*        LaunchedEffect(Unit) {
+                    loginViewModel.isLoginGoogle()
+                }
+                val startDestination = if (uiState.isLogin) Route.Home.route else Route.Login.route*/
+
+        NavHost(navController = navController, startDestination = RouteFactus.Login.route) {
+            composable(route = RouteFactus.Login.route) {
+                Login(loginViewModel, navController, modifier)
+            }
+        }
+    }
+
+    private fun getArgument(navBackStackEntry: NavBackStackEntry, key: String): String? {
+        return navBackStackEntry.arguments?.getString(key)
     }
 }

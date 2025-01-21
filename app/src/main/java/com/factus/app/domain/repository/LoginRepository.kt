@@ -11,4 +11,11 @@ interface LoginRepository {
         username: String,
         password: String
     ): LoginResult<Token>
+
+    suspend fun refreshToken(
+        grantType: String,
+        clientId: String,
+        clientSecret: String,
+        refreshToken: String,
+    ): LoginResult<Token>
 }

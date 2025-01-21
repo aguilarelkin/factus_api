@@ -9,8 +9,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.systemBarsPadding
 import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.collectAsState
-import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavBackStackEntry
@@ -18,6 +16,9 @@ import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
+import com.factus.app.ui.facture.FactureScreen
+import com.factus.app.ui.facture.FactureViewModel
+import com.factus.app.ui.information.HomeScreen
 import com.factus.app.ui.login.Login
 import com.factus.app.ui.login.LoginViewModel
 import com.factus.app.ui.navigation.RouteFactus
@@ -53,17 +54,17 @@ class MainActivity : ComponentActivity() {
     @Composable
     fun NavigationHost(navController: NavHostController, modifier: Modifier) {
         val loginViewModel = hiltViewModel<LoginViewModel>()
-
-        val uiState by loginViewModel.loginState.collectAsState()
-
-        /*        LaunchedEffect(Unit) {
-                    loginViewModel.isLoginGoogle()
-                }
-                val startDestination = if (uiState.isLogin) Route.Home.route else Route.Login.route*/
+        val factureViewModel = hiltViewModel<FactureViewModel>()
 
         NavHost(navController = navController, startDestination = RouteFactus.Login.route) {
+            composable(route = RouteFactus.Home.route) {
+                HomeScreen(navController, modifier)
+            }
             composable(route = RouteFactus.Login.route) {
                 Login(loginViewModel, navController, modifier)
+            }
+            composable(route = RouteFactus.Facture.route) {
+                FactureScreen(factureViewModel, navController, modifier)
             }
         }
     }

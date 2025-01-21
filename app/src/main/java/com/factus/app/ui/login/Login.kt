@@ -19,6 +19,7 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavHostController
 import com.factus.app.domain.models.Token
 import com.factus.app.domain.state.LoginResult
+import com.factus.app.ui.navigation.RouteFactus
 
 @Composable
 fun Login(loginViewModel: LoginViewModel, navController: NavHostController, modifier: Modifier) {
@@ -70,9 +71,13 @@ fun Login(loginViewModel: LoginViewModel, navController: NavHostController, modi
             }
 
             is LoginResult.Success -> {
-                val data = (uiState as LoginResult.Success<Token>).data
-                Text(text = "Login exitoso: ${data?.access_token}")
-             //   navController.navigate("home")
+                //val data = (uiState as LoginResult.Success<Token>).data
+                // Text(text = "Login exitoso: ${data?.access_token}")
+                navController.navigate(RouteFactus.Home.route) {
+                    popUpTo(RouteFactus.Login.route) {
+                        inclusive = true
+                    }
+                }
             }
 
             is LoginResult.Error -> {

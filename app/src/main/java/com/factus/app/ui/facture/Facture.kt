@@ -1,23 +1,30 @@
 package com.factus.app.ui.facture
 
+import android.widget.Toast
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.wrapContentSize
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExposedDropdownMenuBox
 import androidx.compose.material3.ExposedDropdownMenuDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.MenuAnchorType
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
@@ -29,12 +36,19 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.navigation.NavHostController
+import com.factus.app.domain.models.Customer
+import com.factus.app.domain.models.CustomerSaver
 
 /*
 {
@@ -107,19 +121,17 @@ import androidx.navigation.NavHostController
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun FactureScreen(
-    factureViewModel: FactureViewModel,
-    navController: NavHostController,
-    modifier: Modifier
+    factureViewModel: FactureViewModel, navController: NavHostController, modifier: Modifier
 ) {
     Scaffold(topBar = {
-        TopAppBar(title = { Text("") }, navigationIcon = {
+        TopAppBar(title = { Text("Factus") }, navigationIcon = {
             IconButton(onClick = {
-                // navController.popBackStack()
+                navController.popBackStack()
             }) {
                 Icon(
                     imageVector = Icons.AutoMirrored.Filled.ArrowBack,
                     contentDescription = "Back",
-                    tint = Color.White
+                    tint = Color.Black
                 )
             }
         })
@@ -130,6 +142,9 @@ fun FactureScreen(
 
 @Composable
 fun DataFacture(innerPadding: PaddingValues) {
+    val customerData = rememberSaveable(stateSaver = CustomerSaver) { mutableStateOf(Customer()) }
+    val context = LocalContext.current
+
     LazyColumn(
         contentPadding = innerPadding,
         horizontalAlignment = Alignment.CenterHorizontally,
@@ -144,16 +159,103 @@ fun DataFacture(innerPadding: PaddingValues) {
                 LevelText("000000100")
             }
             Spacer(modifier = Modifier.height(8.dp))
+            // Cliente
+            Text("Cliente")
             Row(
                 modifier = Modifier.fillMaxSize()
             ) {
-/*                Column(
+                // Identificación
+                Column(
                     modifier = Modifier.weight(1f),
                     horizontalAlignment = Alignment.CenterHorizontally
                 ) {
-                    LevelText("Nombre")
-                    FieldName(dataValue = productData.value.title) {
-                        productData.value = productData.value.copy(title = it)
+                    LevelText("IDENTIFICACIÓN")
+                    FieldName(dataValue = customerData.value.identification) {
+                        customerData.value = customerData.value.copy(identification = it)
+                    }
+                }
+                Spacer(modifier = Modifier.width(8.dp))
+
+                // DV
+                Column(
+                    modifier = Modifier.weight(1f),
+                    horizontalAlignment = Alignment.CenterHorizontally
+                ) {
+                    LevelText("DV")
+                    FieldName(dataValue = customerData.value.dv) {
+                        customerData.value = customerData.value.copy(dv = it)
+                    }
+                }
+            }
+            Spacer(modifier = Modifier.height(8.dp))
+
+            // Empresa
+            Row(
+                modifier = Modifier.fillMaxSize()
+            ) {
+                Column(
+                    modifier = Modifier.weight(1f),
+                    horizontalAlignment = Alignment.CenterHorizontally
+                ) {
+                    LevelText("EMPRESA")
+                    FieldName(dataValue = customerData.value.company) {
+                        customerData.value = customerData.value.copy(company = it)
+                    }
+                }
+                Spacer(modifier = Modifier.width(8.dp))
+
+                // Nombre comercial (Trade Name)
+                Column(
+                    modifier = Modifier.weight(1f),
+                    horizontalAlignment = Alignment.CenterHorizontally
+                ) {
+                    LevelText("NOMBRE COMERCIAL")
+                    FieldName(dataValue = customerData.value.tradeName) {
+                        customerData.value = customerData.value.copy(tradeName = it)
+                    }
+                }
+            }
+            Spacer(modifier = Modifier.height(8.dp))
+
+            // Nombres
+            Row(
+                modifier = Modifier.fillMaxSize()
+            ) {
+                Column(
+                    modifier = Modifier.weight(1f),
+                    horizontalAlignment = Alignment.CenterHorizontally
+                ) {
+                    LevelText("NOMBRES")
+                    FieldName(dataValue = customerData.value.names) {
+                        customerData.value = customerData.value.copy(names = it)
+                    }
+                }
+                Spacer(modifier = Modifier.width(8.dp))
+
+                Column(
+                    modifier = Modifier.weight(1f),
+                    horizontalAlignment = Alignment.CenterHorizontally
+                ) {
+                    LevelText("DIRECCIÓN")
+                    FieldName(dataValue = customerData.value.address) {
+                        customerData.value = customerData.value.copy(address = it)
+                    }
+                }
+            }
+
+            Spacer(modifier = Modifier.height(8.dp))
+
+            // Email
+            Row(
+                modifier = Modifier.fillMaxSize()
+            ) {
+                Column(
+                    modifier = Modifier.weight(1f),
+                    horizontalAlignment = Alignment.CenterHorizontally
+                ) {
+                    LevelText("EMAIL")
+                    FieldName(dataValue = customerData.value.email) {
+                        customerData.value = customerData.value.copy(email = it)
                     }
                 }
                 Spacer(modifier = Modifier.width(8.dp))
@@ -161,15 +263,100 @@ fun DataFacture(innerPadding: PaddingValues) {
                     modifier = Modifier.weight(1f),
                     horizontalAlignment = Alignment.CenterHorizontally
                 ) {
-                    LevelText("Cedula")
-                    FieldName(dataValue = productData.value.price.toString()) {
-                        productData.value = productData.value.copy(
-                            price = validDouble(it)
-                        )
+                    LevelText("TELÉFONO")
+                    FieldName(dataValue = customerData.value.phone) {
+                        customerData.value = customerData.value.copy(phone = it)
                     }
-                }*/
+                }
             }
             Spacer(modifier = Modifier.height(8.dp))
+
+            // ID Organización Legal
+            Row(
+                modifier = Modifier.fillMaxSize()
+            ) {
+                Column(
+                    modifier = Modifier.weight(1f),
+                    horizontalAlignment = Alignment.CenterHorizontally
+                ) {
+                    LevelText("ID TRIBUTO")
+                    FieldName(dataValue = customerData.value.tributeId) {
+                        customerData.value = customerData.value.copy(tributeId = it)
+                    }
+                }
+                Spacer(modifier = Modifier.width(8.dp))
+                Column(
+                    modifier = Modifier.weight(1f),
+                    horizontalAlignment = Alignment.CenterHorizontally
+                ) {
+                    LevelText("ID MUNICIPIO")
+                    FieldName(dataValue = customerData.value.municipalityId) {
+                        customerData.value = customerData.value.copy(municipalityId = it)
+                    }
+                }
+            }
+
+            Spacer(modifier = Modifier.height(8.dp))
+
+            // ID Documento de Identificación
+            Row(
+                modifier = Modifier.fillMaxSize()
+            ) {
+                Column(
+                    modifier = Modifier.weight(1f),
+                    horizontalAlignment = Alignment.CenterHorizontally
+                ) {
+                    LevelText("ID DOCUMENTO DE IDENTIFICACIÓN")
+                    FieldName(dataValue = customerData.value.identificationDocumentId) {
+                        customerData.value = customerData.value.copy(identificationDocumentId = it)
+                    }
+                }
+                Spacer(modifier = Modifier.width(8.dp))
+                Column(
+                    modifier = Modifier.weight(1f),
+                    horizontalAlignment = Alignment.CenterHorizontally
+                ) {
+                    LevelText("ID ORGANIZACIÓN LEGAL")
+                    FieldName(dataValue = customerData.value.legalOrganizationId) {
+                        customerData.value = customerData.value.copy(legalOrganizationId = it)
+                    }
+                }
+            }
+            Spacer(modifier = Modifier.height(16.dp))
+            Button(
+                onClick = {
+                    val isValid = customerData.value.let { customer ->
+                        customer.identification.isNotBlank() && customer.dv.isNotBlank() && customer.names.isNotBlank() && customer.address.isNotBlank() && customer.email.isNotBlank() && customer.phone.isNotBlank() && customer.legalOrganizationId.isNotBlank() && customer.tributeId.isNotBlank() && customer.identificationDocumentId.isNotBlank() && customer.municipalityId.isNotBlank()
+                    }
+                    if (isValid) {
+                        //dataOperation(id, productData.value, operationViewModel)
+                    } else {
+                        Toast.makeText(
+                            context,
+                            "¡Por favor, completa todos los campos necesarios!",
+                            Toast.LENGTH_SHORT
+                        ).show()
+                    }
+                },
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 16.dp),
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = MaterialTheme.colorScheme.tertiary,
+                    contentColor = MaterialTheme.colorScheme.onPrimary,
+                    disabledContainerColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.12f),
+                    disabledContentColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.38f)
+                ),
+                shape = RoundedCornerShape(12.dp),
+                elevation = ButtonDefaults.buttonElevation(8.dp),
+            ) {
+                Text(
+                    style = MaterialTheme.typography.titleLarge.copy(
+                        fontSize = 20.sp, fontWeight = FontWeight.Bold
+                    ), text = "Crear factura", modifier = Modifier.padding(vertical = 8.dp)
+                )
+            }
+            Spacer(modifier = Modifier.height(16.dp))
         }
     }
 }
@@ -177,7 +364,7 @@ fun DataFacture(innerPadding: PaddingValues) {
 @Composable
 private fun LevelText(text: String) {
     Text(
-        text = text, modifier = Modifier.wrapContentSize()
+        text = text, modifier = Modifier.wrapContentSize(), textAlign = TextAlign.Center
     )
 }
 

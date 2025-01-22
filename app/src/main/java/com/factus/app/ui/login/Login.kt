@@ -15,7 +15,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
-import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavHostController
 import com.factus.app.domain.models.Token
 import com.factus.app.domain.state.LoginResult
@@ -23,7 +22,6 @@ import com.factus.app.ui.navigation.RouteFactus
 
 @Composable
 fun Login(loginViewModel: LoginViewModel, navController: NavHostController, modifier: Modifier) {
-    val loginViewModel = hiltViewModel<LoginViewModel>()
     val uiState by loginViewModel.loginState.collectAsState()
     val uiStateLogin by loginViewModel.loginUser.collectAsState()
     var enabled = true

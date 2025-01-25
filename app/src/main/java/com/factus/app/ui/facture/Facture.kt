@@ -151,16 +151,145 @@ fun DataFacture(innerPadding: PaddingValues) {
         modifier = Modifier.fillMaxWidth()
     ) {
         item {
+            //Caber
             Row(
                 modifier = Modifier.fillMaxSize(), horizontalArrangement = Arrangement.SpaceBetween
             ) {
                 LevelText("Factura")
                 Spacer(modifier = Modifier.height(8.dp))
-                LevelText("000000100")
+                LevelText("reference_code")
+            }
+            Spacer(modifier = Modifier.height(8.dp))
+            Row(
+                modifier = Modifier.fillMaxSize()
+            ) {
+                Column(
+                    modifier = Modifier.weight(1f),
+                    horizontalAlignment = Alignment.CenterHorizontally
+                ) {
+                    LevelText("FECHA DE VENCIMIENTO")
+                    FieldName(dataValue = customerData.value.dv) {
+                        customerData.value = customerData.value.copy(dv = it)
+                    }
+                }
+                Spacer(modifier = Modifier.width(8.dp))
+
+                Column(
+                    modifier = Modifier.weight(1f),
+                    horizontalAlignment = Alignment.CenterHorizontally
+                ) {
+                    LevelText("RANGO DE NUMERACIÓN")
+                    FieldName(dataValue = customerData.value.identification) {
+                        customerData.value = customerData.value.copy(identification = it)
+                    }
+                }
+            }
+            Spacer(modifier = Modifier.height(8.dp))
+            Row(
+                modifier = Modifier.fillMaxSize()
+            ) {
+                Column(
+                    modifier = Modifier.weight(1f),
+                    horizontalAlignment = Alignment.CenterHorizontally
+                ) {
+                    LevelText("FORMA DE PAGO")
+                    FieldName(dataValue = customerData.value.identification) {
+                        customerData.value = customerData.value.copy(identification = it)
+                    }
+                }
+                Spacer(modifier = Modifier.width(8.dp))
+                Column(
+                    modifier = Modifier.weight(1f),
+                    horizontalAlignment = Alignment.CenterHorizontally
+                ) {
+                    LevelText("CÓDIGO DE PAGO")
+                    FieldName(dataValue = customerData.value.identification) {
+                        customerData.value = customerData.value.copy(identification = it)
+                    }
+                }
+            }
+            Spacer(modifier = Modifier.height(8.dp))
+
+            Column(
+                horizontalAlignment = Alignment.CenterHorizontally
+            ) {
+                LevelText("OBSERVACÍON")
+                FieldName(dataValue = customerData.value.dv) {
+                    customerData.value = customerData.value.copy(dv = it)
+                }
+            }
+            Spacer(modifier = Modifier.height(8.dp))
+            Row(
+                modifier = Modifier.fillMaxSize()
+            ) {
+                Column(
+                    modifier = Modifier.weight(1f),
+                    horizontalAlignment = Alignment.CenterHorizontally
+                ) {
+                    LevelText("CÓDIGO DE PAGO")
+                    FieldName(dataValue = customerData.value.identification) {
+                        customerData.value = customerData.value.copy(identification = it)
+                    }
+                }
+            }
+            Spacer(modifier = Modifier.height(8.dp))
+            //Period of fractionation
+            LevelText("PERIODO DE FACTURACIÓN")
+            Spacer(modifier = Modifier.height(8.dp))
+            Row(
+                modifier = Modifier.fillMaxSize()
+            ) {
+                Column(
+                    modifier = Modifier.weight(1f),
+                    horizontalAlignment = Alignment.CenterHorizontally
+                ) {
+                    LevelText("FECHA INICIO")
+                    FieldName(dataValue = customerData.value.identification) {
+                        customerData.value = customerData.value.copy(identification = it)
+                    }
+                }
+                Spacer(modifier = Modifier.width(8.dp))
+
+                // DV
+                Column(
+                    modifier = Modifier.weight(1f),
+                    horizontalAlignment = Alignment.CenterHorizontally
+                ) {
+                    LevelText("HORA INICIO")
+                    FieldName(dataValue = customerData.value.dv) {
+                        customerData.value = customerData.value.copy(dv = it)
+                    }
+                }
+            }
+            Spacer(modifier = Modifier.height(8.dp))
+            Row(
+                modifier = Modifier.fillMaxSize()
+            ) {
+                Column(
+                    modifier = Modifier.weight(1f),
+                    horizontalAlignment = Alignment.CenterHorizontally
+                ) {
+                    LevelText("FECHA FINAL")
+                    FieldName(dataValue = customerData.value.identification) {
+                        customerData.value = customerData.value.copy(identification = it)
+                    }
+                }
+                Spacer(modifier = Modifier.width(8.dp))
+
+                // DV
+                Column(
+                    modifier = Modifier.weight(1f),
+                    horizontalAlignment = Alignment.CenterHorizontally
+                ) {
+                    LevelText("HORA FINAL")
+                    FieldName(dataValue = customerData.value.dv) {
+                        customerData.value = customerData.value.copy(dv = it)
+                    }
+                }
             }
             Spacer(modifier = Modifier.height(8.dp))
             // Cliente
-            Text("Cliente")
+            LevelText("Cliente")
             Row(
                 modifier = Modifier.fillMaxSize()
             ) {
@@ -322,6 +451,18 @@ fun DataFacture(innerPadding: PaddingValues) {
                     }
                 }
             }
+            Spacer(modifier = Modifier.height(8.dp))
+
+            LevelText("PRODUCTOS")
+            Column(
+                horizontalAlignment = Alignment.CenterHorizontally
+            ) {
+                LevelText("notebook")
+                FieldName(dataValue = customerData.value.legalOrganizationId) {
+                    customerData.value = customerData.value.copy(legalOrganizationId = it)
+                }
+            }
+
             Spacer(modifier = Modifier.height(16.dp))
             Button(
                 onClick = {

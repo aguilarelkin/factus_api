@@ -11,5 +11,5 @@ data class Product(
     val standardCodeId: Int,
     val isExcluded: Int,
     val tributeId: Int,
-    val withholdingTaxes: List<Any>
+    val withholdingTaxes: List<WithholdingTax>
 )

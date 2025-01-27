@@ -1,6 +1,8 @@
 package com.factus.app.ui.facture
 
+import android.app.DatePickerDialog
 import android.widget.Toast
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
@@ -13,11 +15,13 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.wrapContentSize
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.Card
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExposedDropdownMenuBox
@@ -33,6 +37,7 @@ import androidx.compose.material3.TextField
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -49,6 +54,9 @@ import androidx.compose.ui.unit.sp
 import androidx.navigation.NavHostController
 import com.factus.app.domain.models.Customer
 import com.factus.app.domain.models.CustomerSaver
+import com.factus.app.domain.models.Product
+import com.factus.app.domain.models.WithholdingTax
+import java.util.Calendar
 
 /*
 {
@@ -140,20 +148,163 @@ fun FactureScreen(
     })
 }
 
-@Composable
+private fun getProductList(): List<Product> {
+    return listOf(
+        Product(
+            codeReference = "12345",
+            name = "Producto de prueba 1",
+            quantity = 1,
+            discountRate = 20,
+            price = 50000,
+            taxRate = "19.00",
+            unitMeasureId = 70,
+            standardCodeId = 1,
+            isExcluded = 0,
+            tributeId = 1,
+            withholdingTaxes = listOf(
+                WithholdingTax(code = "06", withholdingTaxRate = "7.00"),
+                WithholdingTax(code = "05", withholdingTaxRate = "15.00")
+            )
+        ), Product(
+            codeReference = "67890",
+            name = "Producto de prueba 2",
+            quantity = 2,
+            discountRate = 10,
+            price = 30000,
+            taxRate = "19.00",
+            unitMeasureId = 70,
+            standardCodeId = 1,
+            isExcluded = 0,
+            tributeId = 1,
+            withholdingTaxes = emptyList() // Lista vacía de impuestos de retención
+        ), Product(
+            codeReference = "11223",
+            name = "Producto de prueba 3",
+            quantity = 3,
+            discountRate = 15,
+            price = 20000,
+            taxRate = "19.00",
+            unitMeasureId = 70,
+            standardCodeId = 1,
+            isExcluded = 0,
+            tributeId = 1,
+            withholdingTaxes = listOf(
+                WithholdingTax(code = "06", withholdingTaxRate = "7.00")
+            )
+        ), Product(
+            codeReference = "44556",
+            name = "Producto de prueba 4",
+            quantity = 4,
+            discountRate = 25,
+            price = 15000,
+            taxRate = "19.00",
+            unitMeasureId = 70,
+            standardCodeId = 1,
+            isExcluded = 0,
+            tributeId = 1,
+            withholdingTaxes = listOf(
+                WithholdingTax(code = "07", withholdingTaxRate = "10.00")
+            )
+        ), Product(
+            codeReference = "78901",
+            name = "Producto de prueba 5",
+            quantity = 5,
+            discountRate = 30,
+            price = 40000,
+            taxRate = "19.00",
+            unitMeasureId = 70,
+            standardCodeId = 1,
+            isExcluded = 0,
+            tributeId = 1,
+            withholdingTaxes = emptyList()
+        ), Product(
+            codeReference = "23456",
+            name = "Producto de prueba 6",
+            quantity = 6,
+            discountRate = 5,
+            price = 70000,
+            taxRate = "19.00",
+            unitMeasureId = 70,
+            standardCodeId = 1,
+            isExcluded = 0,
+            tributeId = 1,
+            withholdingTaxes = listOf(
+                WithholdingTax(code = "08", withholdingTaxRate = "12.00")
+            )
+        ), Product(
+            codeReference = "34567",
+            name = "Producto de prueba 7",
+            quantity = 7,
+            discountRate = 20,
+            price = 55000,
+            taxRate = "19.00",
+            unitMeasureId = 70,
+            standardCodeId = 1,
+            isExcluded = 0,
+            tributeId = 1,
+            withholdingTaxes = listOf(
+                WithholdingTax(code = "06", withholdingTaxRate = "8.00")
+            )
+        ), Product(
+            codeReference = "45678",
+            name = "Producto de prueba 8",
+            quantity = 8,
+            discountRate = 10,
+            price = 25000,
+            taxRate = "19.00",
+            unitMeasureId = 70,
+            standardCodeId = 1,
+            isExcluded = 0,
+            tributeId = 1,
+            withholdingTaxes = emptyList()
+        ), Product(
+            codeReference = "56789",
+            name = "Producto de prueba 9",
+            quantity = 9,
+            discountRate = 15,
+            price = 60000,
+            taxRate = "19.00",
+            unitMeasureId = 70,
+            standardCodeId = 1,
+            isExcluded = 0,
+            tributeId = 1,
+            withholdingTaxes = listOf(
+                WithholdingTax(code = "05", withholdingTaxRate = "14.00")
+            )
+        ), Product(
+            codeReference = "67801",
+            name = "Producto de prueba 10",
+            quantity = 10,
+            discountRate = 0,
+            price = 120000,
+            taxRate = "19.00",
+            unitMeasureId = 70,
+            standardCodeId = 1,
+            isExcluded = 0,
+            tributeId = 1,
+            withholdingTaxes = listOf(
+                WithholdingTax(code = "07", withholdingTaxRate = "9.00")
+            )
+        )
+    )
+}
+
+
+/*@Composable
 fun DataFacture(innerPadding: PaddingValues) {
     val customerData = rememberSaveable(stateSaver = CustomerSaver) { mutableStateOf(Customer()) }
     val context = LocalContext.current
-
+    val product = getProductList()
     LazyColumn(
         contentPadding = innerPadding,
         horizontalAlignment = Alignment.CenterHorizontally,
-        modifier = Modifier.fillMaxWidth()
+        verticalArrangement = Arrangement.Center,
+        modifier = Modifier.fillMaxSize()
     ) {
         item {
             //Caber
             Row(
-                modifier = Modifier.fillMaxSize(), horizontalArrangement = Arrangement.SpaceBetween
+                modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween
             ) {
                 LevelText("Factura")
                 Spacer(modifier = Modifier.height(8.dp))
@@ -161,7 +312,7 @@ fun DataFacture(innerPadding: PaddingValues) {
             }
             Spacer(modifier = Modifier.height(8.dp))
             Row(
-                modifier = Modifier.fillMaxSize()
+                modifier = Modifier.fillMaxWidth()
             ) {
                 Column(
                     modifier = Modifier.weight(1f),
@@ -186,7 +337,7 @@ fun DataFacture(innerPadding: PaddingValues) {
             }
             Spacer(modifier = Modifier.height(8.dp))
             Row(
-                modifier = Modifier.fillMaxSize()
+                modifier = Modifier.fillMaxWidth()
             ) {
                 Column(
                     modifier = Modifier.weight(1f),
@@ -220,7 +371,7 @@ fun DataFacture(innerPadding: PaddingValues) {
             }
             Spacer(modifier = Modifier.height(8.dp))
             Row(
-                modifier = Modifier.fillMaxSize()
+                modifier = Modifier.fillMaxWidth()
             ) {
                 Column(
                     modifier = Modifier.weight(1f),
@@ -237,7 +388,7 @@ fun DataFacture(innerPadding: PaddingValues) {
             LevelText("PERIODO DE FACTURACIÓN")
             Spacer(modifier = Modifier.height(8.dp))
             Row(
-                modifier = Modifier.fillMaxSize()
+                modifier = Modifier.fillMaxWidth()
             ) {
                 Column(
                     modifier = Modifier.weight(1f),
@@ -263,7 +414,7 @@ fun DataFacture(innerPadding: PaddingValues) {
             }
             Spacer(modifier = Modifier.height(8.dp))
             Row(
-                modifier = Modifier.fillMaxSize()
+                modifier = Modifier.fillMaxWidth()
             ) {
                 Column(
                     modifier = Modifier.weight(1f),
@@ -291,7 +442,7 @@ fun DataFacture(innerPadding: PaddingValues) {
             // Cliente
             LevelText("Cliente")
             Row(
-                modifier = Modifier.fillMaxSize()
+                modifier = Modifier.fillMaxWidth()
             ) {
                 // Identificación
                 Column(
@@ -320,7 +471,7 @@ fun DataFacture(innerPadding: PaddingValues) {
 
             // Empresa
             Row(
-                modifier = Modifier.fillMaxSize()
+                modifier = Modifier.fillMaxWidth()
             ) {
                 Column(
                     modifier = Modifier.weight(1f),
@@ -348,7 +499,7 @@ fun DataFacture(innerPadding: PaddingValues) {
 
             // Nombres
             Row(
-                modifier = Modifier.fillMaxSize()
+                modifier = Modifier.fillMaxWidth()
             ) {
                 Column(
                     modifier = Modifier.weight(1f),
@@ -376,7 +527,7 @@ fun DataFacture(innerPadding: PaddingValues) {
 
             // Email
             Row(
-                modifier = Modifier.fillMaxSize()
+                modifier = Modifier.fillMaxWidth()
             ) {
                 Column(
                     modifier = Modifier.weight(1f),
@@ -402,7 +553,7 @@ fun DataFacture(innerPadding: PaddingValues) {
 
             // ID Organización Legal
             Row(
-                modifier = Modifier.fillMaxSize()
+                modifier = Modifier.fillMaxWidth()
             ) {
                 Column(
                     modifier = Modifier.weight(1f),
@@ -429,7 +580,7 @@ fun DataFacture(innerPadding: PaddingValues) {
 
             // ID Documento de Identificación
             Row(
-                modifier = Modifier.fillMaxSize()
+                modifier = Modifier.fillMaxWidth()
             ) {
                 Column(
                     modifier = Modifier.weight(1f),
@@ -454,15 +605,14 @@ fun DataFacture(innerPadding: PaddingValues) {
             Spacer(modifier = Modifier.height(8.dp))
 
             LevelText("PRODUCTOS")
-            Column(
-                horizontalAlignment = Alignment.CenterHorizontally
-            ) {
-                LevelText("notebook")
-                FieldName(dataValue = customerData.value.legalOrganizationId) {
-                    customerData.value = customerData.value.copy(legalOrganizationId = it)
-                }
-            }
+        }
 
+        items(product) {
+            ProductItem(it)
+        }
+
+
+        item {
             Spacer(modifier = Modifier.height(16.dp))
             Button(
                 onClick = {
@@ -500,6 +650,305 @@ fun DataFacture(innerPadding: PaddingValues) {
             Spacer(modifier = Modifier.height(16.dp))
         }
     }
+}*/
+
+@Composable
+fun DataFacture(innerPadding: PaddingValues) {
+    val customerData = rememberSaveable(stateSaver = CustomerSaver) { mutableStateOf(Customer()) }
+    val context = LocalContext.current
+    val productList = getProductList()
+
+    LazyColumn(
+        contentPadding = innerPadding,
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.spacedBy(8.dp),
+        modifier = Modifier.fillMaxSize()
+    ) {
+        item { HeaderSection() }
+
+        // Sección de formularios: fecha de vencimiento, rango de numeración, etc.
+        item {
+
+            FormSection(label1 = "FECHA DE VENCIMIENTO",
+                value1 = customerData.value.dv,
+                onValueChange1 = { updateCustomerData(customerData, dv = it) },
+                label2 = "RANGO DE NUMERACIÓN",
+                value2 = customerData.value.identification,
+                onValueChange2 = { updateCustomerData(customerData, identification = it) })
+
+            FormSection(label1 = "FORMA DE PAGO",
+                value1 = customerData.value.identification,
+                onValueChange1 = { updateCustomerData(customerData, identification = it) },
+                label2 = "CÓDIGO DE PAGO",
+                value2 = customerData.value.identification,
+                onValueChange2 = { updateCustomerData(customerData, identification = it) })
+
+            FormSection(label1 = "OBSERVACIÓN",
+                value1 = customerData.value.dv,
+                onValueChange1 = { updateCustomerData(customerData, dv = it) },
+                label2 = "CÓDIGO DE PAGO",
+                value2 = customerData.value.identification,
+                onValueChange2 = { updateCustomerData(customerData, identification = it) })
+
+            FormSection(label1 = "FECHA INICIO",
+                value1 = customerData.value.identification,
+                onValueChange1 = { updateCustomerData(customerData, identification = it) },
+                label2 = "HORA INICIO",
+                value2 = customerData.value.dv,
+                onValueChange2 = { updateCustomerData(customerData, dv = it) })
+
+            FormSection(label1 = "FECHA FINAL",
+                value1 = customerData.value.identification,
+                onValueChange1 = { updateCustomerData(customerData, identification = it) },
+                label2 = "HORA FINAL",
+                value2 = customerData.value.dv,
+                onValueChange2 = { updateCustomerData(customerData, dv = it) })
+
+            // Cliente Section
+            ClientSection(customerData)
+
+            // Empresa Section
+            CompanySection(customerData)
+
+            // Producto List
+            LevelText("PRODUCTOS")
+        }
+
+        items(productList) { ProductItem(it) }
+
+        // Botón de acción
+        item {
+            Spacer(modifier = Modifier.height(16.dp))
+            ActionButton(onClick = {
+                val isValid = validateCustomerData(customerData.value)
+                if (isValid) {
+                    // Acción a realizar
+                } else {
+                    Toast.makeText(
+                        context,
+                        "¡Por favor, completa todos los campos necesarios!",
+                        Toast.LENGTH_SHORT
+                    ).show()
+                }
+            })
+            Spacer(modifier = Modifier.height(16.dp))
+        }
+    }
+}
+
+@Composable
+fun HeaderSection() {
+    Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
+        LevelText("Factura")
+        Spacer(modifier = Modifier.height(8.dp))
+        LevelText("reference_code")
+    }
+}
+
+@Composable
+fun DatePickerField(
+    label: String, selectedDate: String, onDateSelected: (String) -> Unit
+) {
+    var openDatePicker by remember { mutableStateOf(false) }
+
+    // DatePicker Dialog state
+    val calendar = Calendar.getInstance()
+    val year = calendar.get(Calendar.YEAR)
+    val month = calendar.get(Calendar.MONTH)
+    val day = calendar.get(Calendar.DAY_OF_MONTH)
+
+    // Open date picker dialog
+    if (openDatePicker) {
+        DatePickerDialog(
+            LocalContext.current, { _, selectedYear, selectedMonth, selectedDay ->
+                val formattedDate =
+                    "$selectedDay/${selectedMonth + 1}/$selectedYear" // "dd/MM/yyyy"
+                onDateSelected(formattedDate)
+            }, year, month, day
+        ).show()
+        openDatePicker = false
+    }
+
+    // Render UI
+    Column(modifier = Modifier
+        .fillMaxWidth()
+        .clickable { openDatePicker = true }
+        .padding(8.dp),
+        horizontalAlignment = Alignment.CenterHorizontally) {
+        LevelText(label)
+        Spacer(modifier = Modifier.height(8.dp))
+        FieldName(dataValue = selectedDate) { }
+    }
+}
+
+@Composable
+fun FormSection(
+    label1: String,
+    value1: String,
+    onValueChange1: (String) -> Unit,
+    label2: String,
+    value2: String,
+    onValueChange2: (String) -> Unit
+) {
+    Row(modifier = Modifier.fillMaxWidth()) {
+        FormColumn(
+            label = label1,
+            value = value1,
+            modifier = Modifier.weight(1f),
+            onValueChange = onValueChange1
+        )
+        Spacer(modifier = Modifier.width(8.dp))
+        FormColumn(
+            label = label2,
+            value = value2,
+            modifier = Modifier.weight(1f),
+            onValueChange = onValueChange2
+        )
+    }
+}
+
+@Composable
+fun FormColumn(label: String, value: String, modifier: Modifier, onValueChange: (String) -> Unit) {
+    Column(modifier = modifier, horizontalAlignment = Alignment.CenterHorizontally) {
+        LevelText(label)
+        FieldName(dataValue = value) { onValueChange(it) }
+    }
+}
+
+@Composable
+fun ClientSection(customerData: MutableState<Customer>) {
+    LevelText("Cliente")
+    FormSection(label1 = "IDENTIFICACIÓN",
+        value1 = customerData.value.identification,
+        onValueChange1 = { updateCustomerData(customerData, identification = it) },
+        label2 = "DV",
+        value2 = customerData.value.dv,
+        onValueChange2 = { updateCustomerData(customerData, dv = it) })
+}
+
+@Composable
+fun CompanySection(customerData: MutableState<Customer>) {
+    Row(modifier = Modifier.fillMaxWidth()) {
+        FormColumn(
+            label = "EMPRESA", value = customerData.value.company, modifier = Modifier.weight(1f)
+        ) {
+            updateCustomerData(
+                customerData, company = it
+            )
+        }
+        Spacer(modifier = Modifier.width(8.dp))
+        FormColumn(
+            label = "NOMBRE COMERCIAL",
+            value = customerData.value.tradeName,
+            modifier = Modifier.weight(1f)
+        ) { updateCustomerData(customerData, tradeName = it) }
+    }
+}
+
+@Composable
+fun ActionButton(onClick: () -> Unit) {
+    Button(
+        onClick = onClick,
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 16.dp),
+        colors = ButtonDefaults.buttonColors(
+            containerColor = MaterialTheme.colorScheme.tertiary,
+            contentColor = MaterialTheme.colorScheme.onPrimary
+        ),
+        shape = RoundedCornerShape(12.dp),
+        elevation = ButtonDefaults.buttonElevation(8.dp)
+    ) {
+        Text(
+            style = MaterialTheme.typography.titleLarge.copy(
+                fontSize = 20.sp, fontWeight = FontWeight.Bold
+            ), text = "Crear factura", modifier = Modifier.padding(vertical = 8.dp)
+        )
+    }
+}
+
+fun validateCustomerData(customer: Customer): Boolean {
+    return customer.identification.isNotBlank() && customer.dv.isNotBlank() && customer.names.isNotBlank() && customer.address.isNotBlank() && customer.email.isNotBlank() && customer.phone.isNotBlank() && customer.legalOrganizationId.isNotBlank() && customer.tributeId.isNotBlank() && customer.identificationDocumentId.isNotBlank() && customer.municipalityId.isNotBlank()
+}
+
+fun updateCustomerData(
+    customerData: MutableState<Customer>,
+    dv: String? = null,
+    identification: String? = null,
+    company: String? = null,
+    tradeName: String? = null
+) {
+    customerData.value = customerData.value.copy(
+        dv = dv ?: customerData.value.dv,
+        identification = identification ?: customerData.value.identification,
+        company = company ?: customerData.value.company,
+        tradeName = tradeName ?: customerData.value.tradeName
+    )
+}
+
+@Composable
+fun ProductItem(product: Product) {
+    Card(modifier = Modifier.padding(16.dp)) {
+        Column(
+            modifier = Modifier
+                .padding(16.dp)
+                .fillMaxWidth()
+        ) {
+            Text(
+                text = product.name,
+                textAlign = TextAlign.Center,
+                fontWeight = FontWeight.Bold,
+                modifier = Modifier.padding(bottom = 12.dp)
+            )
+            Row(modifier = Modifier.fillMaxWidth()) {
+                Text(
+                    text = "Precio:", modifier = Modifier.weight(1f) // Ocupa el espacio disponible
+                )
+                Text(text = "$${product.price}")
+            }
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(top = 8.dp)
+            ) {
+                Text(
+                    text = "Descuento:", modifier = Modifier.weight(1f)
+                )
+                Text(text = "${product.discountRate}%")
+            }
+
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(top = 8.dp)
+            ) {
+                Text(
+                    text = "Impuesto:", modifier = Modifier.weight(1f)
+                )
+                Text(text = "${product.taxRate}%")
+            }
+            if (product.withholdingTaxes.isNotEmpty()) {
+                Column(modifier = Modifier.padding(top = 12.dp)) {
+                    Text(
+                        text = "Retenciones:", fontWeight = FontWeight.Medium
+                    )
+                    product.withholdingTaxes.forEach { tax ->
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.SpaceBetween
+                        ) {
+                            Text(text = "- ${tax.code}")
+                            Text(text = "${tax.withholdingTaxRate}%")
+                        }
+                    }
+                }
+            } else {
+                Text(
+                    text = "Sin retenciones", modifier = Modifier.padding(top = 12.dp)
+                )
+            }
+        }
+    }
 }
 
 @Composable
@@ -533,8 +982,7 @@ fun ListDropdown(
         text = selectedCategory
     }
     ExposedDropdownMenuBox(expanded = expanded, onExpandedChange = { expanded = !expanded }) {
-        OutlinedTextField(
-            value = text,
+        OutlinedTextField(value = text,
             onValueChange = {},
             readOnly = true,
             label = { Text(info) },

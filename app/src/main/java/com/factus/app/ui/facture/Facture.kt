@@ -53,10 +53,14 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavHostController
+import com.factus.app.domain.models.BillingPeriod
 import com.factus.app.domain.models.Customer
 import com.factus.app.domain.models.CustomerSaver
+import com.factus.app.domain.models.Facture
 import com.factus.app.domain.models.Product
 import com.factus.app.domain.models.WithholdingTax
+import java.time.LocalDate
+import java.time.format.DateTimeFormatter
 import java.util.Calendar
 import java.util.Locale
 import java.util.UUID
@@ -291,11 +295,16 @@ private fun getProductList(): List<Product> {
         )
     )
 }
+
 @Composable
 fun DataFacture(innerPadding: PaddingValues) {
     val customerData = rememberSaveable(stateSaver = CustomerSaver) { mutableStateOf(Customer()) }
+    val factureData = remember { mutableStateOf(Facture()) }
+    val billingData = remember { mutableStateOf(BillingPeriod()) }
+
     val context = LocalContext.current
     val productList = getProductList()
+    val formatter = DateTimeFormatter.ofPattern("d/M/yyyy")
 
     LazyColumn(
         contentPadding = innerPadding,
@@ -307,10 +316,15 @@ fun DataFacture(innerPadding: PaddingValues) {
 
         item {
             FormDatePiker(label1 = "FECHA DE VENCIMIENTO",
-                value1 = customerData.value.dv,
-                onValueChange1 = { updateCustomerData(customerData, dv = it) },
+                value1 = factureData.value.payment_due_date.toString(),
+                onValueChange1 = {
+
+                    factureData.value =
+                        factureData.value.copy(payment_due_date = LocalDate.parse(it, formatter))
+                    //updateCustomerData(customerData, dv = it)
+                },
                 label2 = "RANGO DE NUMERACIÓN",
-                value2 = customerData.value.identification,
+                value2 = factureData.value.numbering_range_id.toString(),
                 onValueChange2 = { updateCustomerData(customerData, identification = it) })
 
             /* FormSection(label1 = "FECHA DE VENCIMIENTO",

@@ -38,11 +38,13 @@ object NetworkModule {
      */
     @Provides
     @Singleton
-    fun provideOkHttpClient(): OkHttpClient {
+    fun provideOkHttpClient(dataStoreRepository: DataStoreRepository): OkHttpClient {
         return OkHttpClient.Builder().connectTimeout(1, TimeUnit.MINUTES)
             .readTimeout(30, TimeUnit.MINUTES).writeTimeout(30, TimeUnit.MINUTES).addInterceptor(
                 HttpLoggingInterceptor().setLevel(HttpLoggingInterceptor.Level.HEADERS)
                     .setLevel(HttpLoggingInterceptor.Level.BODY)
+            ).addInterceptor(
+                TokenInterceptor(dataStoreRepository)
             ).build()
     }
 

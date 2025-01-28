@@ -1,6 +1,7 @@
 package com.factus.app.ui.facture
 
 import android.app.DatePickerDialog
+import android.app.TimePickerDialog
 import android.widget.Toast
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -57,6 +58,8 @@ import com.factus.app.domain.models.CustomerSaver
 import com.factus.app.domain.models.Product
 import com.factus.app.domain.models.WithholdingTax
 import java.util.Calendar
+import java.util.Locale
+import java.util.UUID
 
 /*
 {
@@ -666,15 +669,20 @@ fun DataFacture(innerPadding: PaddingValues) {
     ) {
         item { HeaderSection() }
 
-        // Sección de formularios: fecha de vencimiento, rango de numeración, etc.
         item {
-
-            FormSection(label1 = "FECHA DE VENCIMIENTO",
+            FormDatePiker(label1 = "FECHA DE VENCIMIENTO",
                 value1 = customerData.value.dv,
                 onValueChange1 = { updateCustomerData(customerData, dv = it) },
                 label2 = "RANGO DE NUMERACIÓN",
                 value2 = customerData.value.identification,
                 onValueChange2 = { updateCustomerData(customerData, identification = it) })
+
+            /* FormSection(label1 = "FECHA DE VENCIMIENTO",
+                 value1 = customerData.value.dv,
+                 onValueChange1 = { updateCustomerData(customerData, dv = it) },
+                 label2 = "RANGO DE NUMERACIÓN",
+                 value2 = customerData.value.identification,
+                 onValueChange2 = { updateCustomerData(customerData, identification = it) })*/
 
             FormSection(label1 = "FORMA DE PAGO",
                 value1 = customerData.value.identification,
@@ -690,19 +698,32 @@ fun DataFacture(innerPadding: PaddingValues) {
                 value2 = customerData.value.identification,
                 onValueChange2 = { updateCustomerData(customerData, identification = it) })
 
-            FormSection(label1 = "FECHA INICIO",
+            FormTime(label1 = "FECHA INICIO",
                 value1 = customerData.value.identification,
                 onValueChange1 = { updateCustomerData(customerData, identification = it) },
                 label2 = "HORA INICIO",
                 value2 = customerData.value.dv,
                 onValueChange2 = { updateCustomerData(customerData, dv = it) })
 
-            FormSection(label1 = "FECHA FINAL",
+            /*FormSection(label1 = "FECHA INICIO",
+                value1 = customerData.value.identification,
+                onValueChange1 = { updateCustomerData(customerData, identification = it) },
+                label2 = "HORA INICIO",
+                value2 = customerData.value.dv,
+                onValueChange2 = { updateCustomerData(customerData, dv = it) })*/
+            FormTime(label1 = "FECHA FINAL",
                 value1 = customerData.value.identification,
                 onValueChange1 = { updateCustomerData(customerData, identification = it) },
                 label2 = "HORA FINAL",
                 value2 = customerData.value.dv,
                 onValueChange2 = { updateCustomerData(customerData, dv = it) })
+
+            /*FormSection(label1 = "FECHA FINAL",
+                value1 = customerData.value.identification,
+                onValueChange1 = { updateCustomerData(customerData, identification = it) },
+                label2 = "HORA FINAL",
+                value2 = customerData.value.dv,
+                onValueChange2 = { updateCustomerData(customerData, dv = it) })*/
 
             // Cliente Section
             ClientSection(customerData)
@@ -738,11 +759,15 @@ fun DataFacture(innerPadding: PaddingValues) {
 
 @Composable
 fun HeaderSection() {
-    Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
-        LevelText("Factura")
-        Spacer(modifier = Modifier.height(8.dp))
-        LevelText("reference_code")
+    Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.Absolute.Right) {
+
+        LevelText(generateInvoiceReference())
     }
+}
+
+private fun generateInvoiceReference(): String {
+    val uniqueId = UUID.randomUUID().toString()
+    return "FAC-${uniqueId.take(8).uppercase()}"
 }
 
 @Composable
@@ -770,14 +795,51 @@ fun DatePickerField(
     }
 
     // Render UI
-    Column(modifier = Modifier
-        .fillMaxWidth()
-        .clickable { openDatePicker = true }
-        .padding(8.dp),
-        horizontalAlignment = Alignment.CenterHorizontally) {
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clickable { openDatePicker = true },
+        horizontalAlignment = Alignment.CenterHorizontally
+    ) {
         LevelText(label)
-        Spacer(modifier = Modifier.height(8.dp))
         FieldName(dataValue = selectedDate) { }
+    }
+}
+
+@Composable
+fun TimePickerField(
+    label: String, selectedTime: String, onTimeSelected: (String) -> Unit
+) {
+    var openTimePicker by remember { mutableStateOf(false) }
+
+    // Obtener hora y minuto actual
+    val calendar = Calendar.getInstance()
+    val hour = calendar.get(Calendar.HOUR_OF_DAY)
+    val minute = calendar.get(Calendar.MINUTE)
+
+    // Abrir el TimePickerDialog
+    if (openTimePicker) {
+        TimePickerDialog(
+            LocalContext.current, { _, selectedHour, selectedMinute ->
+                val formattedTime =
+                    String.format(Locale.ROOT, "%02d:%02d", selectedHour, selectedMinute)
+                onTimeSelected(formattedTime)
+            }, hour, minute, true // true para formato de 24 horas, cambia a false para 12 horas
+        ).show()
+        openTimePicker = false
+    }
+
+    // Renderizar la UI
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clickable { openTimePicker = true },
+        horizontalAlignment = Alignment.CenterHorizontally
+    ) {
+        Text(text = label)
+        Text(
+            text = selectedTime, style = MaterialTheme.typography.bodyLarge
+        )
     }
 }
 
@@ -808,10 +870,80 @@ fun FormSection(
 }
 
 @Composable
+fun FormDatePiker(
+    label1: String,
+    value1: String,
+    onValueChange1: (String) -> Unit,
+    label2: String,
+    value2: String,
+    onValueChange2: (String) -> Unit
+) {
+    Row(modifier = Modifier.fillMaxWidth()) {
+        FormDatePiker(
+            label = label1,
+            value = value1,
+            modifier = Modifier.weight(1f),
+            onValueChange = onValueChange1
+        )
+        Spacer(modifier = Modifier.width(8.dp))
+        FormColumn(
+            label = label2,
+            value = value2,
+            modifier = Modifier.weight(1f),
+            onValueChange = onValueChange2
+        )
+    }
+}
+
+@Composable
+fun FormTime(
+    label1: String,
+    value1: String,
+    onValueChange1: (String) -> Unit,
+    label2: String,
+    value2: String,
+    onValueChange2: (String) -> Unit
+) {
+    Row(modifier = Modifier.fillMaxWidth()) {
+        FormDatePiker(
+            label = label1,
+            value = value1,
+            modifier = Modifier.weight(1f),
+            onValueChange = onValueChange1
+        )
+        Spacer(modifier = Modifier.width(8.dp))
+        FormTime(
+            label = label2,
+            value = value2,
+            modifier = Modifier.weight(1f),
+            onValueChange = onValueChange2
+        )
+    }
+}
+
+@Composable
 fun FormColumn(label: String, value: String, modifier: Modifier, onValueChange: (String) -> Unit) {
     Column(modifier = modifier, horizontalAlignment = Alignment.CenterHorizontally) {
         LevelText(label)
         FieldName(dataValue = value) { onValueChange(it) }
+    }
+}
+
+@Composable
+fun FormDatePiker(
+    label: String, value: String, modifier: Modifier, onValueChange: (String) -> Unit
+) {
+    Column(modifier = modifier, horizontalAlignment = Alignment.CenterHorizontally) {
+        DatePickerField(label, value) { onValueChange(it) }
+    }
+}
+
+@Composable
+fun FormTime(
+    label: String, value: String, modifier: Modifier, onValueChange: (String) -> Unit
+) {
+    Column(modifier = modifier, horizontalAlignment = Alignment.CenterHorizontally) {
+        TimePickerField(label, value) { onValueChange(it) }
     }
 }
 

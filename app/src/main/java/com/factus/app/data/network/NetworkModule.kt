@@ -2,8 +2,10 @@ package com.factus.app.data.network
 
 import android.content.Context
 import com.factus.app.data.RepositoryDataStoreImpl
+import com.factus.app.data.RepositoryFactureImpl
 import com.factus.app.data.RepositoryLoginImpl
 import com.factus.app.domain.repository.DataStoreRepository
+import com.factus.app.domain.repository.FactureRepository
 import com.factus.app.domain.repository.LoginRepository
 import dagger.Module
 import dagger.Provides
@@ -53,11 +55,28 @@ object NetworkModule {
     }
 
     @Provides
-    fun provideProductRepository(
-        loginApiService: LoginApiService,
-        dataStoreRepository: DataStoreRepository
+    fun provideLoginRepository(
+        loginApiService: LoginApiService, dataStoreRepository: DataStoreRepository
     ): LoginRepository {
         return RepositoryLoginImpl(loginApiService, dataStoreRepository)
+    }
+
+    /**
+     * Provide Service API Facture
+     */
+    @Provides
+    fun provideFactureApiService(retrofit: Retrofit): FactuApiService {
+        return retrofit.create(FactuApiService::class.java)
+    }
+
+    /**
+     * Provide Repository Facture
+     */
+    @Provides
+    fun provideFactureRepository(
+        factuApiService: FactuApiService, dataStoreRepository: DataStoreRepository
+    ): FactureRepository {
+        return RepositoryFactureImpl(factuApiService, dataStoreRepository)
     }
 
     /**

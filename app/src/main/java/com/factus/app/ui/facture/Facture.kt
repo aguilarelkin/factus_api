@@ -299,8 +299,8 @@ private fun getProductList(): List<Product> {
 @Composable
 fun DataFacture(innerPadding: PaddingValues) {
     val customerData = rememberSaveable(stateSaver = CustomerSaver) { mutableStateOf(Customer()) }
-    val factureData = remember { mutableStateOf(Facture()) }
     val billingData = remember { mutableStateOf(BillingPeriod()) }
+    val factureData = remember { mutableStateOf(Facture()) }
 
     val context = LocalContext.current
     val productList = getProductList()
@@ -312,74 +312,109 @@ fun DataFacture(innerPadding: PaddingValues) {
         verticalArrangement = Arrangement.spacedBy(8.dp),
         modifier = Modifier.fillMaxSize()
     ) {
-        item { HeaderSection() }
+        item { HeaderSection(factureData) }
 
         item {
             FormDatePiker(label1 = "FECHA DE VENCIMIENTO",
                 value1 = factureData.value.payment_due_date.toString(),
                 onValueChange1 = {
-
-                    factureData.value =
-                        factureData.value.copy(payment_due_date = LocalDate.parse(it, formatter))
-                    //updateCustomerData(customerData, dv = it)
+                    updateFactureData(factureData, paymentDueDate = LocalDate.parse(it, formatter))
                 },
                 label2 = "RANGO DE NUMERACIÓN",
                 value2 = factureData.value.numbering_range_id.toString(),
-                onValueChange2 = { updateCustomerData(customerData, identification = it) })
-
-            /* FormSection(label1 = "FECHA DE VENCIMIENTO",
-                 value1 = customerData.value.dv,
-                 onValueChange1 = { updateCustomerData(customerData, dv = it) },
-                 label2 = "RANGO DE NUMERACIÓN",
-                 value2 = customerData.value.identification,
-                 onValueChange2 = { updateCustomerData(customerData, identification = it) })*/
+                onValueChange2 = {
+                    updateFactureData(
+                        factureData, numberingRangeId = it.toIntOrNull() ?: 1
+                    )
+                })
 
             FormSection(label1 = "FORMA DE PAGO",
-                value1 = customerData.value.identification,
-                onValueChange1 = { updateCustomerData(customerData, identification = it) },
+                value1 = factureData.value.payment_form,
+                onValueChange1 = { updateFactureData(factureData, paymentForm = it) },
                 label2 = "CÓDIGO DE PAGO",
-                value2 = customerData.value.identification,
-                onValueChange2 = { updateCustomerData(customerData, identification = it) })
+                value2 = factureData.value.payment_method_code,
+                onValueChange2 = { updateFactureData(factureData, paymentMethodCode = it) })
 
             FormSection(label1 = "OBSERVACIÓN",
-                value1 = customerData.value.dv,
-                onValueChange1 = { updateCustomerData(customerData, dv = it) },
-                label2 = "CÓDIGO DE PAGO",
-                value2 = customerData.value.identification,
-                onValueChange2 = { updateCustomerData(customerData, identification = it) })
+                value1 = factureData.value.observation,
+                onValueChange1 = { updateFactureData(factureData, observation = it) },
+                label2 = "REFERENCIA",
+                value2 = factureData.value.reference_code,
+                onValueChange2 = { updateFactureData(factureData, referenceCode = it) })
 
             FormTime(label1 = "FECHA INICIO",
-                value1 = customerData.value.identification,
-                onValueChange1 = { updateCustomerData(customerData, identification = it) },
+                value1 = billingData.value.start_date.toString(),
+                onValueChange1 = {
+                    updateBillingData(
+                        billingData, startDate = LocalDate.parse(it, formatter)
+                    )
+                },
                 label2 = "HORA INICIO",
-                value2 = customerData.value.dv,
-                onValueChange2 = { updateCustomerData(customerData, dv = it) })
+                value2 = billingData.value.start_time,
+                onValueChange2 = { updateBillingData(billingData, startTime = it) })
 
-            /*FormSection(label1 = "FECHA INICIO",
-                value1 = customerData.value.identification,
-                onValueChange1 = { updateCustomerData(customerData, identification = it) },
-                label2 = "HORA INICIO",
-                value2 = customerData.value.dv,
-                onValueChange2 = { updateCustomerData(customerData, dv = it) })*/
             FormTime(label1 = "FECHA FINAL",
-                value1 = customerData.value.identification,
-                onValueChange1 = { updateCustomerData(customerData, identification = it) },
+                value1 = billingData.value.end_date.toString(),
+                onValueChange1 = {
+                    updateBillingData(
+                        billingData, endDate = LocalDate.parse(it, formatter)
+                    )
+                },
                 label2 = "HORA FINAL",
-                value2 = customerData.value.dv,
-                onValueChange2 = { updateCustomerData(customerData, dv = it) })
-
-            /*FormSection(label1 = "FECHA FINAL",
-                value1 = customerData.value.identification,
-                onValueChange1 = { updateCustomerData(customerData, identification = it) },
-                label2 = "HORA FINAL",
-                value2 = customerData.value.dv,
-                onValueChange2 = { updateCustomerData(customerData, dv = it) })*/
+                value2 = billingData.value.end_time,
+                onValueChange2 = { updateBillingData(billingData, endTime = it) })
 
             // Cliente Section
             ClientSection(customerData)
 
-            // Empresa Section
-            CompanySection(customerData)
+            FormSection(label1 = "IDENTIFICACIÓN",
+                value1 = customerData.value.identification,
+                onValueChange1 = { updateCustomerData(customerData, identification = it) },
+                label2 = "DV",
+                value2 = customerData.value.dv,
+                onValueChange2 = { updateCustomerData(customerData, dv = it) })
+
+            FormSection(label1 = "NOMBRE",
+                value1 = customerData.value.names,
+                onValueChange1 = { updateCustomerData(customerData, names = it) },
+                label2 = "DIRECCIÓN",
+                value2 = customerData.value.address,
+                onValueChange2 = { updateCustomerData(customerData, address = it) })
+
+            FormSection(label1 = "EMPRESA",
+                value1 = customerData.value.company,
+                onValueChange1 = { updateCustomerData(customerData, company = it) },
+                label2 = "NOMBRE COMERCIAL",
+                value2 = customerData.value.tradeName,
+                onValueChange2 = { updateCustomerData(customerData, tradeName = it) })
+
+            FormSection(label1 = "EMAIL",
+                value1 = customerData.value.email,
+                onValueChange1 = { updateCustomerData(customerData, email = it) },
+                label2 = "TELÉFONO",
+                value2 = customerData.value.phone,
+                onValueChange2 = { updateCustomerData(customerData, phone = it) })
+
+            FormSection(
+                label1 = "ID ORGANIZACIÓN LEGAL",
+                value1 = customerData.value.legalOrganizationId,
+                onValueChange1 = { updateCustomerData(customerData, legalOrganizationId = it) },
+                label2 = "ID DOCUMENTO IDENTIDAD",
+                value2 = customerData.value.identificationDocumentId,
+                onValueChange2 = {
+                    updateCustomerData(
+                        customerData, identificationDocumentId = it
+                    )
+                },
+            )
+
+            FormSection(label1 = "ID TRIBUTARIO",
+                value1 = customerData.value.tributeId,
+                onValueChange1 = { updateCustomerData(customerData, tributeId = it) },
+
+                label2 = "ID MUNICIPALIDAD",
+                value2 = customerData.value.municipalityId,
+                onValueChange2 = { updateCustomerData(customerData, municipalityId = it) })
 
             // Producto List
             LevelText("PRODUCTOS")
@@ -408,9 +443,13 @@ fun DataFacture(innerPadding: PaddingValues) {
 }
 
 @Composable
-fun HeaderSection() {
+fun HeaderSection(factureData: MutableState<Facture>) {
     Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.Absolute.Right) {
-        LevelText(generateInvoiceReference())
+        val referenceCode = generateInvoiceReference()
+        LaunchedEffect(referenceCode) {
+            updateFactureData(factureData, referenceCode = referenceCode)
+        }
+        LevelText(referenceCode)
     }
 }
 
@@ -599,32 +638,8 @@ fun FormTime(
 @Composable
 fun ClientSection(customerData: MutableState<Customer>) {
     LevelText("Cliente")
-    FormSection(label1 = "IDENTIFICACIÓN",
-        value1 = customerData.value.identification,
-        onValueChange1 = { updateCustomerData(customerData, identification = it) },
-        label2 = "DV",
-        value2 = customerData.value.dv,
-        onValueChange2 = { updateCustomerData(customerData, dv = it) })
 }
 
-@Composable
-fun CompanySection(customerData: MutableState<Customer>) {
-    Row(modifier = Modifier.fillMaxWidth()) {
-        FormColumn(
-            label = "EMPRESA", value = customerData.value.company, modifier = Modifier.weight(1f)
-        ) {
-            updateCustomerData(
-                customerData, company = it
-            )
-        }
-        Spacer(modifier = Modifier.width(8.dp))
-        FormColumn(
-            label = "NOMBRE COMERCIAL",
-            value = customerData.value.tradeName,
-            modifier = Modifier.weight(1f)
-        ) { updateCustomerData(customerData, tradeName = it) }
-    }
-}
 
 @Composable
 fun ActionButton(onClick: () -> Unit) {
@@ -657,13 +672,70 @@ fun updateCustomerData(
     dv: String? = null,
     identification: String? = null,
     company: String? = null,
-    tradeName: String? = null
+    tradeName: String? = null,
+    names: String? = null,
+    address: String? = null,
+    email: String? = null,
+    phone: String? = null,
+    legalOrganizationId: String? = null,
+    tributeId: String? = null,
+    identificationDocumentId: String? = null,
+    municipalityId: String? = null
 ) {
     customerData.value = customerData.value.copy(
         dv = dv ?: customerData.value.dv,
         identification = identification ?: customerData.value.identification,
         company = company ?: customerData.value.company,
-        tradeName = tradeName ?: customerData.value.tradeName
+        tradeName = tradeName ?: customerData.value.tradeName,
+        names = names ?: customerData.value.names,
+        address = address ?: customerData.value.address,
+        email = email ?: customerData.value.email,
+        phone = phone ?: customerData.value.phone,
+        legalOrganizationId = legalOrganizationId ?: customerData.value.legalOrganizationId,
+        tributeId = tributeId ?: customerData.value.tributeId,
+        identificationDocumentId = identificationDocumentId
+            ?: customerData.value.identificationDocumentId,
+        municipalityId = municipalityId ?: customerData.value.municipalityId
+    )
+}
+
+fun updateFactureData(
+    customerData: MutableState<Facture>,
+    numberingRangeId: Int? = null,
+    referenceCode: String? = null,
+    observation: String? = null,
+    paymentForm: String? = null,
+    paymentDueDate: LocalDate? = null,
+    paymentMethodCode: String? = null,
+    billingPeriod: BillingPeriod? = null,
+    customer: Customer? = null,
+    items: List<Product>? = null
+) {
+    customerData.value = customerData.value.copy(
+        numbering_range_id = numberingRangeId ?: customerData.value.numbering_range_id,
+        reference_code = referenceCode ?: customerData.value.reference_code,
+        observation = observation ?: customerData.value.observation,
+        payment_form = paymentForm ?: customerData.value.payment_form,
+        payment_due_date = paymentDueDate ?: customerData.value.payment_due_date,
+        payment_method_code = paymentMethodCode ?: customerData.value.payment_method_code,
+        billing_period = billingPeriod ?: customerData.value.billing_period,
+        customer = customer ?: customerData.value.customer,
+        items = items ?: customerData.value.items
+    )
+}
+
+fun updateBillingData(
+    customerData: MutableState<BillingPeriod>,
+    startDate: LocalDate? = null,
+    startTime: String? = null,
+    endDate: LocalDate? = null,
+    endTime: String? = null
+) {
+    customerData.value = customerData.value.copy(
+        start_date = startDate ?: customerData.value.start_date,
+        start_time = startTime ?: customerData.value.start_time,
+        end_date = endDate ?: customerData.value.end_date,
+        end_time = endTime ?: customerData.value.end_time
     )
 }
 

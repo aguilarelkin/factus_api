@@ -10,6 +10,7 @@ import javax.inject.Inject
 class TokenInterceptor @Inject constructor(
     private val dataStoreRepository: DataStoreRepository,
 ) : Interceptor {
+
     override fun intercept(chain: Interceptor.Chain): Response {
 
         val tokenData = runBlocking {
@@ -18,9 +19,9 @@ class TokenInterceptor @Inject constructor(
 
         val originalRequest = chain.request()
 
-        return if (tokenData?.access_token != null) {
+        return if (!tokenData?.access_token.isNullOrBlank()) {
             val modifiedRequest = originalRequest.newBuilder()
-                .header("Authorization", "${tokenData.token_type} ${tokenData.access_token}")
+                .header("Authorization", "${tokenData?.token_type} ${tokenData?.access_token}")
                 .build()
             chain.proceed(modifiedRequest)
         } else {

@@ -17,6 +17,10 @@ class RepositoryFactureImpl @Inject constructor(
 ) : FactureRepository {
     override suspend fun getNumberingRanges(): LoginResult<List<Numbering>> {
         runCatching {
+            val cachedData = dataStoreRepository.getDocuments()
+            if (cachedData.isNotEmpty()) {
+                return LoginResult.Success(cachedData)
+            }
             factuApiService.getNumberingRanges().map { it.toDomainModel() }
         }.mapCatching {
             dataStoreRepository.saveDocuments(it)
@@ -31,6 +35,10 @@ class RepositoryFactureImpl @Inject constructor(
 
     override suspend fun getUnitsMeasurement(): LoginResult<List<Measurement>> {
         runCatching {
+            val cachedData = dataStoreRepository.getUnits()
+            if (cachedData.isNotEmpty()) {
+                return LoginResult.Success(cachedData)
+            }
             factuApiService.getUnitsMeasurement().map { it.toDomainModel() }
         }.mapCatching {
             dataStoreRepository.saveUnits(it)
@@ -45,6 +53,10 @@ class RepositoryFactureImpl @Inject constructor(
 
     override suspend fun getLocations(): LoginResult<List<Location>> {
         runCatching {
+            val cachedData = dataStoreRepository.getLocations()
+            if (cachedData.isNotEmpty()) {
+                return LoginResult.Success(cachedData)
+            }
             factuApiService.getLocations().map { it.toDomainModel() }
         }.mapCatching {
             dataStoreRepository.saveLocations(it)
@@ -59,6 +71,10 @@ class RepositoryFactureImpl @Inject constructor(
 
     override suspend fun getTributes(): LoginResult<List<Tribute>> {
         runCatching {
+            val cachedData = dataStoreRepository.getTaxes()
+            if (cachedData.isNotEmpty()) {
+                return LoginResult.Success(cachedData)
+            }
             factuApiService.getTributes().map { it.toDomainModel() }
         }.mapCatching {
             dataStoreRepository.saveTaxes(it)

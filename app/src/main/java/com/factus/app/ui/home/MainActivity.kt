@@ -54,7 +54,6 @@ class MainActivity : ComponentActivity() {
     @Composable
     fun NavigationHost(navController: NavHostController, modifier: Modifier) {
         val loginViewModel = hiltViewModel<LoginViewModel>()
-        val factureViewModel = hiltViewModel<FactureViewModel>()
 
         NavHost(navController = navController, startDestination = RouteFactus.Login.route) {
             composable(route = RouteFactus.Home.route) {
@@ -64,6 +63,7 @@ class MainActivity : ComponentActivity() {
                 Login(loginViewModel, navController, modifier)
             }
             composable(route = RouteFactus.Facture.route) {
+                val factureViewModel = hiltViewModel<FactureViewModel>()
                 FactureScreen(factureViewModel, navController, modifier)
             }
         }

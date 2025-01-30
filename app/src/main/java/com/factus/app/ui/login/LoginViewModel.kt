@@ -20,7 +20,6 @@ class LoginViewModel @Inject constructor(
     private val loginRepository: LoginRepository,
     private val dataStoreRepository: DataStoreRepository
 ) : ViewModel() {
-    //val tokenData: LiveData<Token?> = repository.tokenDataFlow().asLiveData()
     private val _loginState = MutableStateFlow<LoginResult<Token>>(
         LoginResult.Loading(false)
     )

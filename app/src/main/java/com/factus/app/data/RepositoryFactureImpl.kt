@@ -1,6 +1,5 @@
 package com.factus.app.data
 
-import android.util.Log
 import com.factus.app.data.network.FactuApiService
 import com.factus.app.domain.models.Location
 import com.factus.app.domain.models.Measurement
@@ -21,10 +20,11 @@ class RepositoryFactureImpl @Inject constructor(
             if (cachedData.isNotEmpty()) {
                 return LoginResult.Success(cachedData)
             }
-            factuApiService.getNumberingRanges().map { it.toDomainModel() }
+            factuApiService.getNumberingRanges().data.map {
+                it.toDomainModel()
+            }
         }.mapCatching {
             dataStoreRepository.saveDocuments(it)
-            Log.e("getDocuments", dataStoreRepository.getDocuments().toString())
             it
         }.fold(onSuccess = {
             return LoginResult.Success(it)
@@ -39,10 +39,9 @@ class RepositoryFactureImpl @Inject constructor(
             if (cachedData.isNotEmpty()) {
                 return LoginResult.Success(cachedData)
             }
-            factuApiService.getUnitsMeasurement().map { it.toDomainModel() }
+            factuApiService.getUnitsMeasurement().data.map { it.toDomainModel() }
         }.mapCatching {
             dataStoreRepository.saveUnits(it)
-            Log.e("getUnits", dataStoreRepository.getUnits().toString())
             it
         }.fold(onSuccess = {
             return LoginResult.Success(it)
@@ -57,10 +56,9 @@ class RepositoryFactureImpl @Inject constructor(
             if (cachedData.isNotEmpty()) {
                 return LoginResult.Success(cachedData)
             }
-            factuApiService.getLocations().map { it.toDomainModel() }
+            factuApiService.getLocations().data.map { it.toDomainModel() }
         }.mapCatching {
             dataStoreRepository.saveLocations(it)
-            Log.e("getLocations", dataStoreRepository.getLocations().toString())
             it
         }.fold(onSuccess = {
             return LoginResult.Success(it)
@@ -75,10 +73,9 @@ class RepositoryFactureImpl @Inject constructor(
             if (cachedData.isNotEmpty()) {
                 return LoginResult.Success(cachedData)
             }
-            factuApiService.getTributes().map { it.toDomainModel() }
+            factuApiService.getTributes().data.map { it.toDomainModel() }
         }.mapCatching {
             dataStoreRepository.saveTaxes(it)
-            Log.e("getTributes", dataStoreRepository.getTaxes().toString())
             it
         }.fold(onSuccess = {
             return LoginResult.Success(it)

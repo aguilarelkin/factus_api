@@ -60,7 +60,7 @@ class RepositoryDataStoreImpl @Inject constructor(private val context: Context) 
     }
 
     override suspend fun saveLocations(locations: List<Location>) {
-        val json = Json.encodeToString(locations)
+        val json = Gson().toJson(locations)
         context.dataStore.edit { preferences ->
             preferences[LOCATIONS_KEY] = json
         }
@@ -69,7 +69,6 @@ class RepositoryDataStoreImpl @Inject constructor(private val context: Context) 
     override suspend fun getLocations(): List<Location> {
         val json = context.dataStore.data.first()[LOCATIONS_KEY] ?: "[]"
         return Gson().fromJson(json, object : TypeToken<List<Location>>() {}.type)
-
     }
 
     override suspend fun saveUnits(units: List<Measurement>) {
@@ -81,7 +80,7 @@ class RepositoryDataStoreImpl @Inject constructor(private val context: Context) 
 
     override suspend fun getUnits(): List<Measurement> {
         val json = context.dataStore.data.first()[UNITS_KEY] ?: "[]"
-        return Gson().fromJson(json, object : TypeToken<List<Unit>>() {}.type)
+        return Gson().fromJson(json, object : TypeToken<List<Measurement>>() {}.type)
     }
 
     override suspend fun saveTaxes(taxes: List<Tribute>) {
@@ -98,7 +97,6 @@ class RepositoryDataStoreImpl @Inject constructor(private val context: Context) 
 
     private fun parseJsonToDocuments(json: String): List<Numbering> {
         val documentList = mutableListOf<Numbering>()
-        // Aquí puedes usar una librería como Gson o Moshi para convertir el JSON a objetos
         val regex = """\{"id": (\d+), "document": "(.*?)"\}""".toRegex()
         val matches = regex.findAll(json)
         for (match in matches) {

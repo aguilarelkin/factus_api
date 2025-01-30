@@ -14,7 +14,6 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.withContext
 import javax.inject.Inject
 
@@ -38,15 +37,10 @@ class FactureViewModel @Inject constructor(
     val tributesState: StateFlow<LoginResult<List<Tribute>>> = _tributesState
 
     init {
-        val cachedData = runBlocking {
-            dataStoreRepository.getDocuments()
-        }
-        if (cachedData.isEmpty()) {
-            fetchNumberingRanges()
-            fetchUnitsMeasurement()
-            fetchLocations()
-            fetchTributes()
-        }
+        fetchNumberingRanges()
+        fetchUnitsMeasurement()
+        fetchLocations()
+        fetchTributes()
     }
 
     private fun <T> handleRequest(
@@ -63,29 +57,28 @@ class FactureViewModel @Inject constructor(
         }*/
     }
 
-    fun fetchNumberingRanges() {
+    private fun fetchNumberingRanges() {
         handleRequest(
             request = { factureRepository.getNumberingRanges() }, stateFlow = _numberingRangesState
         )
     }
 
-    fun fetchUnitsMeasurement() {
+    private fun fetchUnitsMeasurement() {
         handleRequest(
             request = { factureRepository.getUnitsMeasurement() },
             stateFlow = _unitsMeasurementState
         )
     }
 
-    fun fetchLocations() {
+    private fun fetchLocations() {
         handleRequest(
             request = { factureRepository.getLocations() }, stateFlow = _locationsState
         )
     }
 
-    fun fetchTributes() {
+    private fun fetchTributes() {
         handleRequest(
             request = { factureRepository.getTributes() }, stateFlow = _tributesState
         )
     }
-
 }

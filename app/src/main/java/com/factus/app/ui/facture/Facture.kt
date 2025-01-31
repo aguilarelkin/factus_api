@@ -2,6 +2,7 @@ package com.factus.app.ui.facture
 
 import android.app.DatePickerDialog
 import android.app.TimePickerDialog
+import android.util.Log
 import android.widget.Toast
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -13,6 +14,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.wrapContentSize
 import androidx.compose.foundation.lazy.LazyColumn
@@ -23,6 +25,7 @@ import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExposedDropdownMenuBox
@@ -39,6 +42,7 @@ import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.MutableState
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -57,81 +61,17 @@ import com.factus.app.domain.models.BillingPeriod
 import com.factus.app.domain.models.Customer
 import com.factus.app.domain.models.CustomerSaver
 import com.factus.app.domain.models.Facture
+import com.factus.app.domain.models.Numbering
+import com.factus.app.domain.models.Payment
+import com.factus.app.domain.models.PaymentMethodCode
 import com.factus.app.domain.models.Product
 import com.factus.app.domain.models.WithholdingTax
+import com.factus.app.domain.state.LoginResult
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
 import java.util.Calendar
 import java.util.Locale
 import java.util.UUID
-
-/*
-{
-    "numbering_range_id": 4,
-    "reference_code": "I3",
-    "observation": "",
-    "payment_form": "1",
-	"payment_due_date": "2024-12-30",
-    "payment_method_code": "10",
-	"billing_period": {
-        "start_date": "2024-01-10",
-        "start_time": "00:00:00",
-        "end_date": "2024-02-09",
-        "end_time": "23:59:59"
-    },
-    "customer": {
-        "identification": "123456789",
-        "dv": "3",
-        "company": "",
-        "trade_name": "",
-        "names": "Alan Turing",
-        "address": "calle 1 # 2-68",
-        "email": "alanturing@enigmasas.com",
-        "phone": "1234567890",
-        "legal_organization_id": "2",
-        "tribute_id": "21",
-        "identification_document_id": "3",
-        "municipality_id": "980"
-    },
-    "items": [
-        {
-            "code_reference": "12345",
-            "name": "producto de prueba",
-            "quantity": 1,
-            "discount_rate": 20,
-            "price": 50000,
-            "tax_rate": "19.00",
-            "unit_measure_id": 70,
-            "standard_code_id": 1,
-            "is_excluded": 0,
-            "tribute_id": 1,
-            "withholding_taxes": [
-                {
-                    "code": "06",
-                    "withholding_tax_rate": "7.00"
-                },
-                {
-                    "code": "05",
-                    "withholding_tax_rate": "15.00"
-                }
-            ]
-        },
-        {
-            "code_reference": "54321",
-            "name": "producto de prueba 2",
-            "quantity": 1,
-            "discount_rate": 0,
-            "price": 50000,
-            "tax_rate": "5.00",
-            "unit_measure_id": 70,
-            "standard_code_id": 1,
-            "is_excluded": 0,
-            "tribute_id": 1,
-            "withholding_taxes": []
-        }
-    ]
-}
- */
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -151,7 +91,27 @@ fun FactureScreen(
             }
         })
     }, content = { innerPadding ->
-        DataFacture(innerPadding)
+        val state by factureViewModel.numberingRangesState.collectAsState()
+
+        when (state) {
+            is LoginResult.Error -> {
+                val errorMessage = (state as LoginResult.Error<*>).message
+                Text(
+                    text = "Error: $errorMessage", color = Color.Red
+                )
+            }
+
+            is LoginResult.Loading -> {
+                val data = (state as LoginResult.Loading<*>).isLoading
+                if (data) {
+                    CircularProgressIndicator()
+                }
+            }
+
+            is LoginResult.Success -> {
+                DataFacture(innerPadding, factureViewModel)
+            }
+        }
     })
 }
 
@@ -297,10 +257,27 @@ private fun getProductList(): List<Product> {
 }
 
 @Composable
-fun DataFacture(innerPadding: PaddingValues) {
+fun DataFacture(innerPadding: PaddingValues, factureViewModel: FactureViewModel) {
     val customerData = rememberSaveable(stateSaver = CustomerSaver) { mutableStateOf(Customer()) }
     val billingData = remember { mutableStateOf(BillingPeriod()) }
     val factureData = remember { mutableStateOf(Facture()) }
+
+    val stateNumbering by factureViewModel.numberingRangesState.collectAsState()
+    val stateUnits by factureViewModel.unitsMeasurementState.collectAsState()
+    val stateLocations by factureViewModel.locationsState.collectAsState()
+    val stateTributes by factureViewModel.tributesState.collectAsState()
+    // val dataNumbering = (stateNumbering as? LoginResult.Success)?.data
+    val paymentMethods = listOf(
+        PaymentMethodCode(10, "Efectivo"),
+        PaymentMethodCode(42, "Consignación"),
+        PaymentMethodCode(20, "Cheque"),
+        PaymentMethodCode(47, "Transferencia"),
+        PaymentMethodCode(71, "Bonos"),
+        PaymentMethodCode(72, "Vales"),
+        PaymentMethodCode(1, "Medio de pago no definido"),
+        PaymentMethodCode(49, "Tarjeta Débito"),
+        PaymentMethodCode(48, "Tarjeta Crédito")
+    )
 
     val context = LocalContext.current
     val productList = getProductList()
@@ -315,32 +292,54 @@ fun DataFacture(innerPadding: PaddingValues) {
         item { HeaderSection(factureData) }
 
         item {
-            FormDatePiker(label1 = "FECHA DE VENCIMIENTO",
+
+            FormDateList<Numbering>(label1 = "FECHA DE VENCIMIENTO",
                 value1 = factureData.value.payment_due_date.toString(),
-                onValueChange1 = {
-                    updateFactureData(factureData, paymentDueDate = LocalDate.parse(it, formatter))
+                onValueChange1 = { newDate ->
+                    updateFactureData(
+                        factureData, paymentDueDate = LocalDate.parse(newDate, formatter)
+                    )
                 },
                 label2 = "RANGO DE NUMERACIÓN",
-                value2 = factureData.value.numbering_range_id.toString(),
-                onValueChange2 = {
+                value2 = Numbering(id = 0, document = ""),
+                onValueChange2 = { newNumbering ->
                     updateFactureData(
-                        factureData, numberingRangeId = it.toIntOrNull() ?: 1
+                        factureData, numberingRangeId = newNumbering.id
                     )
-                })
+                },
+                state = stateNumbering.data,
+                itemToString = { it.document })
 
-            FormSection(label1 = "FORMA DE PAGO",
-                value1 = factureData.value.payment_form,
-                onValueChange1 = { updateFactureData(factureData, paymentForm = it) },
-                label2 = "CÓDIGO DE PAGO",
-                value2 = factureData.value.payment_method_code,
-                onValueChange2 = { updateFactureData(factureData, paymentMethodCode = it) })
-
-            FormSection(label1 = "OBSERVACIÓN",
-                value1 = factureData.value.observation,
-                onValueChange1 = { updateFactureData(factureData, observation = it) },
-                label2 = "REFERENCIA",
-                value2 = factureData.value.reference_code,
-                onValueChange2 = { updateFactureData(factureData, referenceCode = it) })
+            Row(modifier = Modifier.fillMaxWidth()) {
+                ListDropdown(
+                    info = "FORMA DE PAGO",
+                    categories = listOf(
+                        Payment(id = 1, name = "Contado"), Payment(id = 2, name = "Crédito")
+                    ),
+                    selectedCategory = Payment(id = 0, name = ""),
+                    onCategorySelected = {
+                        updateFactureData(
+                            factureData, paymentForm = it.id.toString()
+                        )
+                    },
+                    itemToString = { it.name },
+                    modifier = Modifier.weight(1f),
+                )
+                Spacer(modifier = Modifier.width(8.dp))
+                ListDropdown(
+                    info = "CÓDIGO DE PAGO",
+                    categories = paymentMethods,
+                    selectedCategory = PaymentMethodCode(code = 0, description = ""),
+                    onCategorySelected = {
+                        updateFactureData(
+                            factureData, paymentMethodCode = it.code.toString()
+                        )
+                        Log.e("asdfasd", factureData.value.toString())
+                    },
+                    itemToString = { it.description },
+                    modifier = Modifier.weight(1f),
+                )
+            }
 
             FormTime(label1 = "FECHA INICIO",
                 value1 = billingData.value.start_date.toString(),
@@ -584,6 +583,41 @@ fun FormDatePiker(
 }
 
 @Composable
+fun <T> FormDateList(
+    label1: String,
+    value1: String,
+    onValueChange1: (String) -> Unit,
+    label2: String,
+    value2: T,
+    onValueChange2: (T) -> Unit,
+    state: List<T>?,
+    itemToString: (T) -> String = { it.toString() }
+) {
+    Row(modifier = Modifier.fillMaxWidth()) {
+        FormDatePiker(
+            label = label1,
+            value = value1,
+            modifier = Modifier.weight(1f),
+            onValueChange = onValueChange1
+        )
+        Spacer(modifier = Modifier.width(8.dp))
+
+        state?.let { nonNullState ->
+            ListDropdown(
+                info = label2,
+                categories = nonNullState,
+                selectedCategory = value2,
+                onCategorySelected = onValueChange2,
+                itemToString = itemToString,
+                modifier = Modifier.weight(1f),
+            )
+        } ?: run {
+            CircularProgressIndicator(modifier = Modifier.size(24.dp))
+        }
+    }
+}
+
+@Composable
 fun FormTime(
     label1: String,
     value1: String,
@@ -823,35 +857,43 @@ private fun FieldName(dataValue: String, dataOnChange: (String) -> Unit) {
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun ListDropdown(
+fun <T> ListDropdown(
     info: String,
-    categories: List<String>,
-    selectedCategory: String,
-    onCategorySelected: (String) -> Unit
+    categories: List<T>,
+    selectedCategory: T,
+    onCategorySelected: (T) -> Unit,
+    itemToString: (T) -> String = { it.toString() },
+    modifier: Modifier
 ) {
     var expanded by remember { mutableStateOf(false) }
-    var text by remember { mutableStateOf(selectedCategory) }
-    LaunchedEffect(key1 = selectedCategory) {
-        text = selectedCategory
-    }
-    ExposedDropdownMenuBox(expanded = expanded, onExpandedChange = { expanded = !expanded }) {
-        OutlinedTextField(value = text,
-            onValueChange = {},
-            readOnly = true,
-            label = { Text(info) },
-            trailingIcon = {
-                ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded)
-            },
-            modifier = Modifier.menuAnchor(type = MenuAnchorType.PrimaryEditable)
-        )
+    var text by remember { mutableStateOf(itemToString(selectedCategory)) }
 
-        ExposedDropdownMenu(expanded = expanded, onDismissRequest = { expanded = false }) {
-            categories.forEach { category ->
-                DropdownMenuItem(text = { Text(text = category) }, onClick = {
-                    text = category
-                    onCategorySelected(category)
-                    expanded = false
-                })
+    LaunchedEffect(selectedCategory) {
+        text = itemToString(selectedCategory)
+    }
+    Column(modifier = modifier, horizontalAlignment = Alignment.CenterHorizontally) {
+        LevelText(info)
+        ExposedDropdownMenuBox(expanded = expanded, onExpandedChange = { expanded = !expanded }) {
+            OutlinedTextField(
+                value = text,
+                onValueChange = {},
+                readOnly = true,
+                //label = { Text(info) },
+                trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded) },
+                modifier = Modifier.menuAnchor(MenuAnchorType.PrimaryEditable)
+
+            )
+            ExposedDropdownMenu(
+                expanded = expanded,
+                onDismissRequest = { expanded = false },
+            ) {
+                categories.forEach { category ->
+                    DropdownMenuItem(text = { Text(itemToString(category)) }, onClick = {
+                        text = itemToString(category)
+                        onCategorySelected(category)
+                        expanded = false
+                    })
+                }
             }
         }
     }

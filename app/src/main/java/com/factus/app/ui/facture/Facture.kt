@@ -61,10 +61,14 @@ import com.factus.app.domain.models.BillingPeriod
 import com.factus.app.domain.models.Customer
 import com.factus.app.domain.models.CustomerSaver
 import com.factus.app.domain.models.Facture
+import com.factus.app.domain.models.IdentificationDocument
+import com.factus.app.domain.models.LegalOrganization
+import com.factus.app.domain.models.Location
 import com.factus.app.domain.models.Numbering
 import com.factus.app.domain.models.Payment
 import com.factus.app.domain.models.PaymentMethodCode
 import com.factus.app.domain.models.Product
+import com.factus.app.domain.models.TributeClient
 import com.factus.app.domain.models.WithholdingTax
 import com.factus.app.domain.state.LoginResult
 import java.time.LocalDate
@@ -260,13 +264,19 @@ private fun getProductList(): List<Product> {
 fun DataFacture(innerPadding: PaddingValues, factureViewModel: FactureViewModel) {
     val customerData = rememberSaveable(stateSaver = CustomerSaver) { mutableStateOf(Customer()) }
     val billingData = remember { mutableStateOf(BillingPeriod()) }
-    val factureData = remember { mutableStateOf(Facture()) }
+    val factureData = remember {
+        mutableStateOf(Facture())
+
+    }
 
     val stateNumbering by factureViewModel.numberingRangesState.collectAsState()
     val stateUnits by factureViewModel.unitsMeasurementState.collectAsState()
     val stateLocations by factureViewModel.locationsState.collectAsState()
     val stateTributes by factureViewModel.tributesState.collectAsState()
-    // val dataNumbering = (stateNumbering as? LoginResult.Success)?.data
+
+    //val dataLocations: List<Location>? = (stateLocations as? LoginResult.Success)?.data
+
+
     val paymentMethods = listOf(
         PaymentMethodCode(10, "Efectivo"),
         PaymentMethodCode(42, "Consignación"),
@@ -278,7 +288,26 @@ fun DataFacture(innerPadding: PaddingValues, factureViewModel: FactureViewModel)
         PaymentMethodCode(49, "Tarjeta Débito"),
         PaymentMethodCode(48, "Tarjeta Crédito")
     )
+    val identificationDocuments = listOf(
+        IdentificationDocument(1, "Registro civil"),
+        IdentificationDocument(2, "Tarjeta de identidad"),
+        IdentificationDocument(3, "Cédula de ciudadanía"),
+        IdentificationDocument(4, "Tarjeta de extranjería"),
+        IdentificationDocument(5, "Cédula de extranjería"),
+        IdentificationDocument(6, "NIT"),
+        IdentificationDocument(7, "Pasaporte"),
+        IdentificationDocument(8, "Documento de identificación extranjero"),
+        IdentificationDocument(9, "PEP"),
+        IdentificationDocument(10, "NIT otro país"),
+        IdentificationDocument(11, "NUIP*")
+    )
 
+    val organizations = listOf(
+        LegalOrganization(1, "Persona Jurídica"), LegalOrganization(2, "Persona Natural")
+    )
+    val tributes = listOf(
+        TributeClient(18, "IVA"), TributeClient(21, "No aplica *")
+    )
     val context = LocalContext.current
     val productList = getProductList()
     val formatter = DateTimeFormatter.ofPattern("d/M/yyyy")
@@ -334,7 +363,6 @@ fun DataFacture(innerPadding: PaddingValues, factureViewModel: FactureViewModel)
                         updateFactureData(
                             factureData, paymentMethodCode = it.code.toString()
                         )
-                        Log.e("asdfasd", factureData.value.toString())
                     },
                     itemToString = { it.description },
                     modifier = Modifier.weight(1f),
@@ -362,17 +390,40 @@ fun DataFacture(innerPadding: PaddingValues, factureViewModel: FactureViewModel)
                 label2 = "HORA FINAL",
                 value2 = billingData.value.end_time,
                 onValueChange2 = { updateBillingData(billingData, endTime = it) })
-
+            FormColumn(label = "OBSERVACIÓN",
+                value = factureData.value.observation,
+                modifier = Modifier.fillMaxWidth(),
+                onValueChange = {
+                    updateFactureData(
+                        factureData, observation = it
+                    )
+                })
             // Cliente Section
             ClientSection(customerData)
+            Row(modifier = Modifier.fillMaxWidth()) {
+                FormColumn(label = "IDENTIFICACIÓN",
+                    value = customerData.value.identification,
+                    modifier = Modifier.weight(1f),
+                    onValueChange = {
+                        updateCustomerData(
+                            customerData, identification = it
+                        )
+                    })
+                Spacer(modifier = Modifier.width(8.dp))
+                ListDropdown(
+                    info = "ID DOCUMENTO",
+                    categories = identificationDocuments,
+                    selectedCategory = IdentificationDocument(id = 0, name = ""),
+                    onCategorySelected = {
+                        updateCustomerData(
+                            customerData, identificationDocumentId = it.id.toString()
+                        )
+                    },
+                    itemToString = { it.name },
+                    modifier = Modifier.weight(1f),
+                )
 
-            FormSection(label1 = "IDENTIFICACIÓN",
-                value1 = customerData.value.identification,
-                onValueChange1 = { updateCustomerData(customerData, identification = it) },
-                label2 = "DV",
-                value2 = customerData.value.dv,
-                onValueChange2 = { updateCustomerData(customerData, dv = it) })
-
+            }
             FormSection(label1 = "NOMBRE",
                 value1 = customerData.value.names,
                 onValueChange1 = { updateCustomerData(customerData, names = it) },
@@ -393,27 +444,65 @@ fun DataFacture(innerPadding: PaddingValues, factureViewModel: FactureViewModel)
                 label2 = "TELÉFONO",
                 value2 = customerData.value.phone,
                 onValueChange2 = { updateCustomerData(customerData, phone = it) })
+            Row(modifier = Modifier.fillMaxWidth()) {
+                ListDropdown(
+                    info = "ORGANIZACIÓN LEGAL",
+                    categories = organizations,
+                    selectedCategory = LegalOrganization(legal_organization_id = 0, nombre = ""),
+                    onCategorySelected = {
+                        updateCustomerData(
+                            customerData, legalOrganizationId = it.legal_organization_id.toString()
+                        )
+                    },
+                    itemToString = { it.nombre },
+                    modifier = Modifier.weight(1f),
+                )
+                Spacer(modifier = Modifier.width(8.dp))
+                FormColumn(
+                    label = "DV",
+                    value = customerData.value.dv,
+                    modifier = Modifier.weight(1f),
+                    onValueChange = {
+                        updateCustomerData(
+                            customerData, dv = it
+                        )
+                    },
+                )
 
-            FormSection(
-                label1 = "ID ORGANIZACIÓN LEGAL",
-                value1 = customerData.value.legalOrganizationId,
-                onValueChange1 = { updateCustomerData(customerData, legalOrganizationId = it) },
-                label2 = "ID DOCUMENTO IDENTIDAD",
-                value2 = customerData.value.identificationDocumentId,
-                onValueChange2 = {
-                    updateCustomerData(
-                        customerData, identificationDocumentId = it
-                    )
-                },
-            )
-
-            FormSection(label1 = "ID TRIBUTARIO",
-                value1 = customerData.value.tributeId,
-                onValueChange1 = { updateCustomerData(customerData, tributeId = it) },
-
-                label2 = "ID MUNICIPALIDAD",
-                value2 = customerData.value.municipalityId,
-                onValueChange2 = { updateCustomerData(customerData, municipalityId = it) })
+            }
+            Row(modifier = Modifier.fillMaxWidth()) {
+                ListDropdown(
+                    info = "TRIBUTO",
+                    categories = tributes,
+                    selectedCategory = TributeClient(tribute_id = 0, nombre = ""),
+                    onCategorySelected = {
+                        updateCustomerData(
+                            customerData, tributeId = it.tribute_id.toString()
+                        )
+                    },
+                    itemToString = { it.nombre },
+                    modifier = Modifier.weight(1f),
+                )
+                Spacer(modifier = Modifier.width(8.dp))
+                ListDropdown(
+                    info = "MUNICIPALIDAD",
+                    categories = stateLocations.data ?: listOf(
+                        Location(
+                            id = 0, name = "", code = "", department = ""
+                        )
+                    ),
+                    selectedCategory = Location(
+                        id = 0, name = "", code = "", department = ""
+                    ),
+                    onCategorySelected = {
+                        updateCustomerData(
+                            customerData, municipalityId = it.id.toString()
+                        )
+                    },
+                    itemToString = { it.name },
+                    modifier = Modifier.weight(1f),
+                )
+            }
 
             // Producto List
             LevelText("PRODUCTOS")
@@ -425,6 +514,12 @@ fun DataFacture(innerPadding: PaddingValues, factureViewModel: FactureViewModel)
         item {
             Spacer(modifier = Modifier.height(16.dp))
             ActionButton(onClick = {
+                factureData.value = factureData.value.copy(
+                    customer = customerData.value,
+                    billing_period = billingData.value,
+                    items = productList
+                )
+                Log.e("asdfasdf", factureData.value.toString())
                 val isValid = validateCustomerData(customerData.value)
                 if (isValid) {
                     // Acción a realizar

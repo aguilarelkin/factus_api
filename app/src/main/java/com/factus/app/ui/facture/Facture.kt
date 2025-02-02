@@ -2,7 +2,6 @@ package com.factus.app.ui.facture
 
 import android.app.DatePickerDialog
 import android.app.TimePickerDialog
-import android.util.Log
 import android.widget.Toast
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -14,7 +13,6 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.wrapContentSize
 import androidx.compose.foundation.lazy.LazyColumn
@@ -123,10 +121,10 @@ private fun getProductList(): List<Product> {
     return listOf(
         Product(
             codeReference = "12345",
-            name = "Producto de prueba 1",
+            name = "Laptop Dell XPS 13",
             quantity = 1,
             discountRate = 20,
-            price = 50000,
+            price = 1500000,
             taxRate = "19.00",
             unitMeasureId = 70,
             standardCodeId = 1,
@@ -138,22 +136,22 @@ private fun getProductList(): List<Product> {
             )
         ), Product(
             codeReference = "67890",
-            name = "Producto de prueba 2",
+            name = "Smartphone Samsung Galaxy S21",
             quantity = 2,
             discountRate = 10,
-            price = 30000,
+            price = 900000,
             taxRate = "19.00",
             unitMeasureId = 70,
             standardCodeId = 1,
             isExcluded = 0,
             tributeId = 1,
-            withholdingTaxes = emptyList() // Lista vacía de impuestos de retención
+            withholdingTaxes = emptyList() // Sin impuestos de retención
         ), Product(
             codeReference = "11223",
-            name = "Producto de prueba 3",
+            name = "Tablet Apple iPad Pro",
             quantity = 3,
             discountRate = 15,
-            price = 20000,
+            price = 1200000,
             taxRate = "19.00",
             unitMeasureId = 70,
             standardCodeId = 1,
@@ -164,10 +162,10 @@ private fun getProductList(): List<Product> {
             )
         ), Product(
             codeReference = "44556",
-            name = "Producto de prueba 4",
+            name = "Auriculares Bose QuietComfort",
             quantity = 4,
             discountRate = 25,
-            price = 15000,
+            price = 350000,
             taxRate = "19.00",
             unitMeasureId = 70,
             standardCodeId = 1,
@@ -178,10 +176,10 @@ private fun getProductList(): List<Product> {
             )
         ), Product(
             codeReference = "78901",
-            name = "Producto de prueba 5",
+            name = "Reloj Casio G-Shock",
             quantity = 5,
             discountRate = 30,
-            price = 40000,
+            price = 500000,
             taxRate = "19.00",
             unitMeasureId = 70,
             standardCodeId = 1,
@@ -190,10 +188,10 @@ private fun getProductList(): List<Product> {
             withholdingTaxes = emptyList()
         ), Product(
             codeReference = "23456",
-            name = "Producto de prueba 6",
+            name = "Impresora HP LaserJet",
             quantity = 6,
             discountRate = 5,
-            price = 70000,
+            price = 800000,
             taxRate = "19.00",
             unitMeasureId = 70,
             standardCodeId = 1,
@@ -204,10 +202,10 @@ private fun getProductList(): List<Product> {
             )
         ), Product(
             codeReference = "34567",
-            name = "Producto de prueba 7",
+            name = "Monitor LG UltraWide",
             quantity = 7,
             discountRate = 20,
-            price = 55000,
+            price = 600000,
             taxRate = "19.00",
             unitMeasureId = 70,
             standardCodeId = 1,
@@ -218,10 +216,10 @@ private fun getProductList(): List<Product> {
             )
         ), Product(
             codeReference = "45678",
-            name = "Producto de prueba 8",
+            name = "Teclado Logitech MX Keys",
             quantity = 8,
             discountRate = 10,
-            price = 25000,
+            price = 250000,
             taxRate = "19.00",
             unitMeasureId = 70,
             standardCodeId = 1,
@@ -230,10 +228,10 @@ private fun getProductList(): List<Product> {
             withholdingTaxes = emptyList()
         ), Product(
             codeReference = "56789",
-            name = "Producto de prueba 9",
+            name = "Mouse Microsoft Arc",
             quantity = 9,
             discountRate = 15,
-            price = 60000,
+            price = 150000,
             taxRate = "19.00",
             unitMeasureId = 70,
             standardCodeId = 1,
@@ -244,10 +242,10 @@ private fun getProductList(): List<Product> {
             )
         ), Product(
             codeReference = "67801",
-            name = "Producto de prueba 10",
+            name = "Cámara Canon EOS Rebel",
             quantity = 10,
             discountRate = 0,
-            price = 120000,
+            price = 2000000,
             taxRate = "19.00",
             unitMeasureId = 70,
             standardCodeId = 1,
@@ -535,8 +533,8 @@ fun DataFacture(innerPadding: PaddingValues, factureViewModel: FactureViewModel)
                     billing_period = billingData.value,
                     items = productList
                 )
-                Log.e("asdfasdf", factureData.value.toString())
-                val isValid = validateCustomerData(customerData.value)
+                val isValid =
+                    validateCustomerData(factureData.value) && isValidFacture(factureData.value)
                 if (isValid) {
                     // Acción a realizar
                 } else {
@@ -747,8 +745,54 @@ fun ActionButton(onClick: () -> Unit) {
     }
 }
 
-fun validateCustomerData(customer: Customer): Boolean {
-    return customer.identification.isNotBlank() && customer.tributeId.isNotBlank() && customer.identificationDocumentId.isNotBlank() && customer.municipalityId.isNotBlank()
+fun validateCustomerData(facture: Facture): Boolean {
+    if (facture.payment_form == "2" && facture.payment_due_date == null) {
+        return false
+    }
+    if ((facture.customer.identificationDocumentId == "6" || facture.customer.identificationDocumentId == "10") && facture.customer.dv.isNullOrBlank()) {
+        return false
+    }
+    if (facture.customer.legalOrganizationId == "1" && facture.customer.company.isNullOrBlank()) {
+        return false
+    }
+    return true
+}
+
+fun isValidFacture(facture: Facture): Boolean {
+
+    if (facture.numbering_range_id <= 0) return false
+    if (facture.reference_code.isBlank()) return false
+    //if (facture.observation.isBlank()) return false
+    if (facture.payment_form.isBlank()) return false
+    //if (facture.payment_due_date == null) return false
+    if (facture.payment_method_code.isBlank()) return false
+
+    val bp = facture.billing_period ?: return false
+    if (bp.start_date == null) return false
+    if (bp.start_time.isNullOrBlank()) return false
+    if (bp.end_date == null) return false
+    if (bp.end_time.isNullOrBlank()) return false
+
+
+    val customer = facture.customer
+    if (customer.identification.isBlank()) return false
+    //if (customer.dv.isNullOrBlank()) return false
+    //if (customer.company.isNullOrBlank()) return false
+    //if (customer.tradeName.isNullOrBlank()) return false
+    if (customer.names.isNullOrBlank()) return false
+    if (customer.address.isNullOrBlank()) return false
+    if (customer.email.isNullOrBlank()) return false
+    if (customer.phone.isNullOrBlank()) return false
+    if (customer.legalOrganizationId.isNullOrBlank()) return false
+    if (customer.tributeId.isBlank()) return false
+    if (customer.identificationDocumentId.isBlank()) return false
+    if (customer.municipalityId.isBlank()) return false
+
+    if (facture.items.isEmpty()) return false
+    facture.items.forEach { product ->
+        if (product.name.isBlank()) return false
+    }
+    return true
 }
 
 fun updateCustomerData(

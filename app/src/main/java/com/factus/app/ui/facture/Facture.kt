@@ -270,13 +270,7 @@ fun DataFacture(innerPadding: PaddingValues, factureViewModel: FactureViewModel)
     }
 
     val stateNumbering by factureViewModel.numberingRangesState.collectAsState()
-    val stateUnits by factureViewModel.unitsMeasurementState.collectAsState()
     val stateLocations by factureViewModel.locationsState.collectAsState()
-    val stateTributes by factureViewModel.tributesState.collectAsState()
-
-    //val dataLocations: List<Location>? = (stateLocations as? LoginResult.Success)?.data
-
-
     val paymentMethods = listOf(
         PaymentMethodCode(10, "Efectivo"),
         PaymentMethodCode(42, "Consignación"),
@@ -308,6 +302,7 @@ fun DataFacture(innerPadding: PaddingValues, factureViewModel: FactureViewModel)
     val tributes = listOf(
         TributeClient(18, "IVA"), TributeClient(21, "No aplica *")
     )
+
     val context = LocalContext.current
     val productList = getProductList()
     val formatter = DateTimeFormatter.ofPattern("d/M/yyyy")
@@ -322,23 +317,32 @@ fun DataFacture(innerPadding: PaddingValues, factureViewModel: FactureViewModel)
 
         item {
 
-            FormDateList<Numbering>(label1 = "FECHA DE VENCIMIENTO",
-                value1 = factureData.value.payment_due_date.toString(),
-                onValueChange1 = { newDate ->
-                    updateFactureData(
-                        factureData, paymentDueDate = LocalDate.parse(newDate, formatter)
-                    )
-                },
-                label2 = "RANGO DE NUMERACIÓN",
-                value2 = Numbering(id = 0, document = ""),
-                onValueChange2 = { newNumbering ->
-                    updateFactureData(
-                        factureData, numberingRangeId = newNumbering.id
-                    )
-                },
-                state = stateNumbering.data,
-                itemToString = { it.document })
+            Row(modifier = Modifier.fillMaxWidth()) {
+                if (factureData.value.payment_form == "2") {
+                    FormDatePiker(label = "FECHA DE VENCIMIENTO",
+                        value = if (factureData.value.payment_due_date == null) "" else factureData.value.payment_due_date.toString(),
+                        modifier = Modifier.weight(1f),
+                        onValueChange = {
+                            updateFactureData(
+                                factureData, paymentDueDate = LocalDate.parse(it, formatter)
+                            )
+                        })
+                    Spacer(modifier = Modifier.width(8.dp))
+                }
+                ListDropdown(
+                    info = "RANGO DE NUMERACIÓN",
+                    categories = stateNumbering.data ?: emptyList(),
+                    selectedCategory = Numbering(id = 0, document = ""),
+                    onCategorySelected = {
+                        updateFactureData(
+                            factureData, numberingRangeId = it.id
+                        )
+                    },
+                    itemToString = { it.document },
+                    modifier = Modifier.weight(1f),
 
+                    )
+            }
             Row(modifier = Modifier.fillMaxWidth()) {
                 ListDropdown(
                     info = "FORMA DE PAGO",
@@ -370,7 +374,7 @@ fun DataFacture(innerPadding: PaddingValues, factureViewModel: FactureViewModel)
             }
 
             FormTime(label1 = "FECHA INICIO",
-                value1 = billingData.value.start_date.toString(),
+                value1 = if (billingData.value.start_date == null) "" else billingData.value.start_date.toString(),
                 onValueChange1 = {
                     updateBillingData(
                         billingData, startDate = LocalDate.parse(it, formatter)
@@ -381,10 +385,11 @@ fun DataFacture(innerPadding: PaddingValues, factureViewModel: FactureViewModel)
                 onValueChange2 = { updateBillingData(billingData, startTime = it) })
 
             FormTime(label1 = "FECHA FINAL",
-                value1 = billingData.value.end_date.toString(),
+                value1 = if (billingData.value.end_date == null) "" else billingData.value.end_date.toString(),
                 onValueChange1 = {
                     updateBillingData(
                         billingData, endDate = LocalDate.parse(it, formatter)
+
                     )
                 },
                 label2 = "HORA FINAL",
@@ -422,7 +427,6 @@ fun DataFacture(innerPadding: PaddingValues, factureViewModel: FactureViewModel)
                     itemToString = { it.name },
                     modifier = Modifier.weight(1f),
                 )
-
             }
             FormSection(label1 = "NOMBRE",
                 value1 = customerData.value.names,
@@ -431,12 +435,27 @@ fun DataFacture(innerPadding: PaddingValues, factureViewModel: FactureViewModel)
                 value2 = customerData.value.address,
                 onValueChange2 = { updateCustomerData(customerData, address = it) })
 
-            FormSection(label1 = "EMPRESA",
-                value1 = customerData.value.company,
-                onValueChange1 = { updateCustomerData(customerData, company = it) },
-                label2 = "NOMBRE COMERCIAL",
-                value2 = customerData.value.tradeName,
-                onValueChange2 = { updateCustomerData(customerData, tradeName = it) })
+            Row(modifier = Modifier.fillMaxWidth()) {
+                if (customerData.value.legalOrganizationId.equals("1")) {
+                    FormColumn(label = "EMPRESA",
+                        value = customerData.value.company,
+                        modifier = Modifier.weight(1f),
+                        onValueChange = {
+                            updateCustomerData(
+                                customerData, company = it
+                            )
+                        })
+                    Spacer(modifier = Modifier.width(8.dp))
+                }
+                FormColumn(label = "NOMBRE COMERCIAL",
+                    value = customerData.value.tradeName,
+                    modifier = Modifier.weight(1f),
+                    onValueChange = {
+                        updateCustomerData(
+                            customerData, tradeName = it
+                        )
+                    })
+            }
 
             FormSection(label1 = "EMAIL",
                 value1 = customerData.value.email,
@@ -458,17 +477,18 @@ fun DataFacture(innerPadding: PaddingValues, factureViewModel: FactureViewModel)
                     modifier = Modifier.weight(1f),
                 )
                 Spacer(modifier = Modifier.width(8.dp))
-                FormColumn(
-                    label = "DV",
-                    value = customerData.value.dv,
-                    modifier = Modifier.weight(1f),
-                    onValueChange = {
-                        updateCustomerData(
-                            customerData, dv = it
-                        )
-                    },
-                )
-
+                if (customerData.value.identificationDocumentId == "10" || customerData.value.identificationDocumentId == "6") {
+                    FormColumn(
+                        label = "DV",
+                        value = customerData.value.dv,
+                        modifier = Modifier.weight(1f),
+                        onValueChange = {
+                            updateCustomerData(
+                                customerData, dv = it
+                            )
+                        },
+                    )
+                }
             }
             Row(modifier = Modifier.fillMaxWidth()) {
                 ListDropdown(
@@ -486,11 +506,7 @@ fun DataFacture(innerPadding: PaddingValues, factureViewModel: FactureViewModel)
                 Spacer(modifier = Modifier.width(8.dp))
                 ListDropdown(
                     info = "MUNICIPALIDAD",
-                    categories = stateLocations.data ?: listOf(
-                        Location(
-                            id = 0, name = "", code = "", department = ""
-                        )
-                    ),
+                    categories = stateLocations.data ?: emptyList(),
                     selectedCategory = Location(
                         id = 0, name = "", code = "", department = ""
                     ),
@@ -554,7 +570,7 @@ private fun generateInvoiceReference(): String {
 
 @Composable
 fun DatePickerField(
-    label: String, selectedDate: String, onDateSelected: (String) -> Unit
+    label: String, selectedDate: String?, onDateSelected: (String) -> Unit
 ) {
     var openDatePicker by remember { mutableStateOf(false) }
 
@@ -590,7 +606,7 @@ fun DatePickerField(
 
 @Composable
 fun TimePickerField(
-    label: String, selectedTime: String, onTimeSelected: (String) -> Unit
+    label: String, selectedTime: String?, onTimeSelected: (String) -> Unit
 ) {
     var openTimePicker by remember { mutableStateOf(false) }
 
@@ -620,7 +636,7 @@ fun TimePickerField(
     ) {
         Text(text = label)
         Text(
-            text = selectedTime, style = MaterialTheme.typography.bodyLarge
+            text = selectedTime ?: "", style = MaterialTheme.typography.bodyLarge
         )
     }
 }
@@ -628,10 +644,10 @@ fun TimePickerField(
 @Composable
 fun FormSection(
     label1: String,
-    value1: String,
+    value1: String?,
     onValueChange1: (String) -> Unit,
     label2: String,
-    value2: String,
+    value2: String?,
     onValueChange2: (String) -> Unit
 ) {
     Row(modifier = Modifier.fillMaxWidth()) {
@@ -648,77 +664,16 @@ fun FormSection(
             modifier = Modifier.weight(1f),
             onValueChange = onValueChange2
         )
-    }
-}
-
-@Composable
-fun FormDatePiker(
-    label1: String,
-    value1: String,
-    onValueChange1: (String) -> Unit,
-    label2: String,
-    value2: String,
-    onValueChange2: (String) -> Unit
-) {
-    Row(modifier = Modifier.fillMaxWidth()) {
-        FormDatePiker(
-            label = label1,
-            value = value1,
-            modifier = Modifier.weight(1f),
-            onValueChange = onValueChange1
-        )
-        Spacer(modifier = Modifier.width(8.dp))
-        FormColumn(
-            label = label2,
-            value = value2,
-            modifier = Modifier.weight(1f),
-            onValueChange = onValueChange2
-        )
-    }
-}
-
-@Composable
-fun <T> FormDateList(
-    label1: String,
-    value1: String,
-    onValueChange1: (String) -> Unit,
-    label2: String,
-    value2: T,
-    onValueChange2: (T) -> Unit,
-    state: List<T>?,
-    itemToString: (T) -> String = { it.toString() }
-) {
-    Row(modifier = Modifier.fillMaxWidth()) {
-        FormDatePiker(
-            label = label1,
-            value = value1,
-            modifier = Modifier.weight(1f),
-            onValueChange = onValueChange1
-        )
-        Spacer(modifier = Modifier.width(8.dp))
-
-        state?.let { nonNullState ->
-            ListDropdown(
-                info = label2,
-                categories = nonNullState,
-                selectedCategory = value2,
-                onCategorySelected = onValueChange2,
-                itemToString = itemToString,
-                modifier = Modifier.weight(1f),
-            )
-        } ?: run {
-            CircularProgressIndicator(modifier = Modifier.size(24.dp))
-        }
     }
 }
 
 @Composable
 fun FormTime(
     label1: String,
-    value1: String,
+    value1: String?,
     onValueChange1: (String) -> Unit,
     label2: String,
-    value2: String,
+    value2: String?,
     onValueChange2: (String) -> Unit
 ) {
     Row(modifier = Modifier.fillMaxWidth()) {
@@ -739,7 +694,7 @@ fun FormTime(
 }
 
 @Composable
-fun FormColumn(label: String, value: String, modifier: Modifier, onValueChange: (String) -> Unit) {
+fun FormColumn(label: String, value: String?, modifier: Modifier, onValueChange: (String) -> Unit) {
     Column(modifier = modifier, horizontalAlignment = Alignment.CenterHorizontally) {
         LevelText(label)
         FieldName(dataValue = value) { onValueChange(it) }
@@ -748,7 +703,7 @@ fun FormColumn(label: String, value: String, modifier: Modifier, onValueChange: 
 
 @Composable
 fun FormDatePiker(
-    label: String, value: String, modifier: Modifier, onValueChange: (String) -> Unit
+    label: String, value: String?, modifier: Modifier, onValueChange: (String) -> Unit
 ) {
     Column(modifier = modifier, horizontalAlignment = Alignment.CenterHorizontally) {
         DatePickerField(label, value) { onValueChange(it) }
@@ -757,7 +712,7 @@ fun FormDatePiker(
 
 @Composable
 fun FormTime(
-    label: String, value: String, modifier: Modifier, onValueChange: (String) -> Unit
+    label: String, value: String?, modifier: Modifier, onValueChange: (String) -> Unit
 ) {
     Column(modifier = modifier, horizontalAlignment = Alignment.CenterHorizontally) {
         TimePickerField(label, value) { onValueChange(it) }
@@ -793,7 +748,7 @@ fun ActionButton(onClick: () -> Unit) {
 }
 
 fun validateCustomerData(customer: Customer): Boolean {
-    return customer.identification.isNotBlank() && customer.dv.isNotBlank() && customer.names.isNotBlank() && customer.address.isNotBlank() && customer.email.isNotBlank() && customer.phone.isNotBlank() && customer.legalOrganizationId.isNotBlank() && customer.tributeId.isNotBlank() && customer.identificationDocumentId.isNotBlank() && customer.municipalityId.isNotBlank()
+    return customer.identification.isNotBlank() && customer.tributeId.isNotBlank() && customer.identificationDocumentId.isNotBlank() && customer.municipalityId.isNotBlank()
 }
 
 fun updateCustomerData(
@@ -941,9 +896,9 @@ private fun LevelText(text: String) {
 }
 
 @Composable
-private fun FieldName(dataValue: String, dataOnChange: (String) -> Unit) {
+private fun FieldName(dataValue: String?, dataOnChange: (String) -> Unit) {
     TextField(
-        value = dataValue,
+        value = if (dataValue.isNullOrEmpty()) "" else dataValue,
         singleLine = true,
         shape = RoundedCornerShape(8.dp),
         onValueChange = { dataOnChange(it) },

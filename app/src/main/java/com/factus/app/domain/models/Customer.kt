@@ -4,20 +4,20 @@ import androidx.compose.runtime.saveable.Saver
 
 data class Customer(
     val identification: String = "",
-    val dv: String = "",
-    val company: String = "",
-    val tradeName: String = "",
-    val names: String = "",
-    val address: String = "",
-    val email: String = "",
-    val phone: String = "",
-    val legalOrganizationId: String = "",
+    val dv: String? = null,
+    val company: String? = null,
+    val tradeName: String? = null,
+    val names: String? = null,
+    val address: String? = null,
+    val email: String? = null,
+    val phone: String? = null,
+    val legalOrganizationId: String? = null,
     val tributeId: String = "",
     val identificationDocumentId: String = "",
     val municipalityId: String = ""
 )
 
-val CustomerSaver = Saver<Customer, Map<String, String>>(save = { customer ->
+val CustomerSaver = Saver<Customer, Map<String, String?>>(save = { customer ->
     mapOf(
         "identification" to customer.identification,
         "dv" to customer.dv,

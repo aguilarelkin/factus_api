@@ -1,6 +1,7 @@
 package com.factus.app.domain.models
 
 import androidx.compose.runtime.saveable.Saver
+import com.factus.app.data.response.CustomerResponse
 
 data class Customer(
     val identification: String = "",
@@ -13,11 +14,26 @@ data class Customer(
     val phone: String? = null,
     val legalOrganizationId: String? = null,
     val tributeId: String = "",
-    val identificationDocumentId: String = "",
+    val identificationDocumentId: Int = 0,
     val municipalityId: String = ""
-)
+) {
+    fun toDomain() = CustomerResponse(
+        identification,
+        dv,
+        company,
+        tradeName,
+        names,
+        address,
+        email,
+        phone,
+        legalOrganizationId,
+        tributeId,
+        identificationDocumentId,
+        municipalityId
+    )
+}
 
-val CustomerSaver = Saver<Customer, Map<String, String?>>(save = { customer ->
+val CustomerSaver = Saver<Customer, Map<String, Any?>>(save = { customer ->
     mapOf(
         "identification" to customer.identification,
         "dv" to customer.dv,
@@ -34,17 +50,17 @@ val CustomerSaver = Saver<Customer, Map<String, String?>>(save = { customer ->
     )
 }, restore = { savedState ->
     Customer(
-        identification = savedState["identification"] ?: "",
-        dv = savedState["dv"] ?: "",
-        company = savedState["company"] ?: "",
-        tradeName = savedState["tradeName"] ?: "",
-        names = savedState["names"] ?: "",
-        address = savedState["address"] ?: "",
-        email = savedState["email"] ?: "",
-        phone = savedState["phone"] ?: "",
-        legalOrganizationId = savedState["legalOrganizationId"] ?: "",
-        tributeId = savedState["tributeId"] ?: "",
-        identificationDocumentId = savedState["identificationDocumentId"] ?: "",
-        municipalityId = savedState["municipalityId"] ?: ""
+        identification = savedState["identification"] as? String ?: "",
+        dv = savedState["dv"] as? String,
+        company = savedState["company"] as? String,
+        tradeName = savedState["tradeName"] as? String,
+        names = savedState["names"] as? String,
+        address = savedState["address"] as? String,
+        email = savedState["email"] as? String,
+        phone = savedState["phone"] as? String,
+        legalOrganizationId = savedState["legalOrganizationId"] as? String,
+        tributeId = savedState["tributeId"] as? String ?: "",
+        identificationDocumentId = savedState["identificationDocumentId"] as? Int ?: 0,
+        municipalityId = savedState["municipalityId"] as? String ?: ""
     )
 })

@@ -2,6 +2,7 @@ package com.factus.app.ui.facture
 
 import android.app.DatePickerDialog
 import android.app.TimePickerDialog
+import android.util.Log
 import android.widget.Toast
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -81,7 +82,11 @@ fun FactureScreen(
     factureViewModel: FactureViewModel, navController: NavHostController, modifier: Modifier
 ) {
     Scaffold(topBar = {
-        TopAppBar(title = { Text("Factus") }, navigationIcon = {
+        TopAppBar(title = {
+            Text(
+                "Factus", modifier = Modifier.fillMaxWidth(), textAlign = TextAlign.Center
+            )
+        }, navigationIcon = {
             IconButton(onClick = {
                 navController.popBackStack()
             }) {
@@ -111,7 +116,7 @@ fun FactureScreen(
             }
 
             is LoginResult.Success -> {
-                DataFacture(innerPadding, factureViewModel)
+                DataFacture(innerPadding, factureViewModel, navController)
             }
         }
     })
@@ -131,8 +136,8 @@ private fun getProductList(): List<Product> {
             isExcluded = 0,
             tributeId = 1,
             withholdingTaxes = listOf(
-                WithholdingTax(code = "06", withholdingTaxRate = "7.00"),
-                WithholdingTax(code = "05", withholdingTaxRate = "15.00")
+                WithholdingTax(code = "06", withholdingTaxRate = "7.00"), // ReteRenta
+                WithholdingTax(code = "05", withholdingTaxRate = "15.00") // ReteIVA
             )
         ), Product(
             codeReference = "67890",
@@ -145,7 +150,7 @@ private fun getProductList(): List<Product> {
             standardCodeId = 1,
             isExcluded = 0,
             tributeId = 1,
-            withholdingTaxes = emptyList() // Sin impuestos de retención
+            withholdingTaxes = emptyList()
         ), Product(
             codeReference = "11223",
             name = "Tablet Apple iPad Pro",
@@ -158,7 +163,7 @@ private fun getProductList(): List<Product> {
             isExcluded = 0,
             tributeId = 1,
             withholdingTaxes = listOf(
-                WithholdingTax(code = "06", withholdingTaxRate = "7.00")
+                WithholdingTax(code = "06", withholdingTaxRate = "7.00") // ReteRenta
             )
         ), Product(
             codeReference = "44556",
@@ -172,7 +177,7 @@ private fun getProductList(): List<Product> {
             isExcluded = 0,
             tributeId = 1,
             withholdingTaxes = listOf(
-                WithholdingTax(code = "07", withholdingTaxRate = "10.00")
+                WithholdingTax(code = "06", withholdingTaxRate = "10.00") // ReteICA
             )
         ), Product(
             codeReference = "78901",
@@ -198,7 +203,7 @@ private fun getProductList(): List<Product> {
             isExcluded = 0,
             tributeId = 1,
             withholdingTaxes = listOf(
-                WithholdingTax(code = "08", withholdingTaxRate = "12.00")
+                WithholdingTax(code = "05", withholdingTaxRate = "15.00")
             )
         ), Product(
             codeReference = "34567",
@@ -212,7 +217,7 @@ private fun getProductList(): List<Product> {
             isExcluded = 0,
             tributeId = 1,
             withholdingTaxes = listOf(
-                WithholdingTax(code = "06", withholdingTaxRate = "8.00")
+                WithholdingTax(code = "06", withholdingTaxRate = "8.00") // ReteRenta
             )
         ), Product(
             codeReference = "45678",
@@ -238,7 +243,7 @@ private fun getProductList(): List<Product> {
             isExcluded = 0,
             tributeId = 1,
             withholdingTaxes = listOf(
-                WithholdingTax(code = "05", withholdingTaxRate = "14.00")
+                WithholdingTax(code = "05", withholdingTaxRate = "14.00") // ReteIVA
             )
         ), Product(
             codeReference = "67801",
@@ -252,20 +257,27 @@ private fun getProductList(): List<Product> {
             isExcluded = 0,
             tributeId = 1,
             withholdingTaxes = listOf(
-                WithholdingTax(code = "07", withholdingTaxRate = "9.00")
+                WithholdingTax(code = "06", withholdingTaxRate = "9.00") // ReteICA
             )
         )
     )
+
 }
 
 @Composable
-fun DataFacture(innerPadding: PaddingValues, factureViewModel: FactureViewModel) {
+fun DataFacture(
+    innerPadding: PaddingValues,
+    factureViewModel: FactureViewModel,
+    navController: NavHostController
+) {
     val customerData = rememberSaveable(stateSaver = CustomerSaver) { mutableStateOf(Customer()) }
     val billingData = remember { mutableStateOf(BillingPeriod()) }
     val factureData = remember {
         mutableStateOf(Facture())
 
     }
+    val factureState by factureViewModel.factureState.collectAsState()
+    var enabled by remember { mutableStateOf(true) }
 
     val stateNumbering by factureViewModel.numberingRangesState.collectAsState()
     val stateLocations by factureViewModel.locationsState.collectAsState()
@@ -413,14 +425,17 @@ fun DataFacture(innerPadding: PaddingValues, factureViewModel: FactureViewModel)
                         )
                     })
                 Spacer(modifier = Modifier.width(8.dp))
+                Text(customerData.value.identificationDocumentId.toString())
+
                 ListDropdown(
                     info = "ID DOCUMENTO",
                     categories = identificationDocuments,
                     selectedCategory = IdentificationDocument(id = 0, name = ""),
                     onCategorySelected = {
                         updateCustomerData(
-                            customerData, identificationDocumentId = it.id.toString()
+                            customerData, identificationDocumentId = it.id
                         )
+                        Log.e("error", customerData.value.identificationDocumentId.toString())
                     },
                     itemToString = { it.name },
                     modifier = Modifier.weight(1f),
@@ -475,7 +490,7 @@ fun DataFacture(innerPadding: PaddingValues, factureViewModel: FactureViewModel)
                     modifier = Modifier.weight(1f),
                 )
                 Spacer(modifier = Modifier.width(8.dp))
-                if (customerData.value.identificationDocumentId == "10" || customerData.value.identificationDocumentId == "6") {
+                if (customerData.value.identificationDocumentId == 10 || customerData.value.identificationDocumentId == 6) {
                     FormColumn(
                         label = "DV",
                         value = customerData.value.dv,
@@ -524,10 +539,37 @@ fun DataFacture(innerPadding: PaddingValues, factureViewModel: FactureViewModel)
 
         items(productList) { ProductItem(it) }
 
-        // Botón de acción
+        when (factureState) {
+            is LoginResult.Error -> {
+                val errorMessage = (factureState as LoginResult.Error<Facture>).message
+                item {
+                    enabled = true
+                    Text(
+                        text = "Error: $errorMessage", color = Color.Red
+                    )
+                }
+            }
+
+            is LoginResult.Loading -> {
+                val data = (factureState as LoginResult.Loading<*>).isLoading
+                enabled = !data
+                if (data) {
+                    item {
+                        CircularProgressIndicator()
+                    }
+                }
+            }
+
+            is LoginResult.Success -> {
+                enabled = false
+                Toast.makeText(context, "Factura creada exitosamente", Toast.LENGTH_SHORT).show()
+                navController.popBackStack()
+            }
+        }
+
         item {
             Spacer(modifier = Modifier.height(16.dp))
-            ActionButton(onClick = {
+            ActionButton(enabled = enabled, onClick = {
                 factureData.value = factureData.value.copy(
                     customer = customerData.value,
                     billing_period = billingData.value,
@@ -536,7 +578,7 @@ fun DataFacture(innerPadding: PaddingValues, factureViewModel: FactureViewModel)
                 val isValid =
                     validateCustomerData(factureData.value) && isValidFacture(factureData.value)
                 if (isValid) {
-                    // Acción a realizar
+                    factureViewModel.createdFacture(factureData.value)
                 } else {
                     Toast.makeText(
                         context,
@@ -598,7 +640,7 @@ fun DatePickerField(
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
         LevelText(label)
-        FieldName(dataValue = selectedDate) { }
+        FieldName(dataValue = selectedDate, enabled = false) { }
     }
 }
 
@@ -608,24 +650,23 @@ fun TimePickerField(
 ) {
     var openTimePicker by remember { mutableStateOf(false) }
 
-    // Obtener hora y minuto actual
     val calendar = Calendar.getInstance()
     val hour = calendar.get(Calendar.HOUR_OF_DAY)
     val minute = calendar.get(Calendar.MINUTE)
 
-    // Abrir el TimePickerDialog
     if (openTimePicker) {
         TimePickerDialog(
             LocalContext.current, { _, selectedHour, selectedMinute ->
-                val formattedTime =
-                    String.format(Locale.ROOT, "%02d:%02d", selectedHour, selectedMinute)
+                val currentSecond = Calendar.getInstance().get(Calendar.SECOND)
+                val formattedTime = String.format(
+                    Locale.ROOT, "%02d:%02d:%02d", selectedHour, selectedMinute, currentSecond
+                )
                 onTimeSelected(formattedTime)
-            }, hour, minute, true // true para formato de 24 horas, cambia a false para 12 horas
+            }, hour, minute, true
         ).show()
         openTimePicker = false
     }
 
-    // Renderizar la UI
     Column(
         modifier = Modifier
             .fillMaxWidth()
@@ -638,6 +679,7 @@ fun TimePickerField(
         )
     }
 }
+
 
 @Composable
 fun FormSection(
@@ -724,9 +766,10 @@ fun ClientSection(customerData: MutableState<Customer>) {
 
 
 @Composable
-fun ActionButton(onClick: () -> Unit) {
+fun ActionButton(enabled: Boolean = true, onClick: () -> Unit) {
     Button(
         onClick = onClick,
+        enabled = enabled,
         modifier = Modifier
             .fillMaxWidth()
             .padding(horizontal = 16.dp),
@@ -749,7 +792,7 @@ fun validateCustomerData(facture: Facture): Boolean {
     if (facture.payment_form == "2" && facture.payment_due_date == null) {
         return false
     }
-    if ((facture.customer.identificationDocumentId == "6" || facture.customer.identificationDocumentId == "10") && facture.customer.dv.isNullOrBlank()) {
+    if ((facture.customer.identificationDocumentId == 6 || facture.customer.identificationDocumentId == 10) && facture.customer.dv.isNullOrBlank()) {
         return false
     }
     if (facture.customer.legalOrganizationId == "1" && facture.customer.company.isNullOrBlank()) {
@@ -785,7 +828,7 @@ fun isValidFacture(facture: Facture): Boolean {
     if (customer.phone.isNullOrBlank()) return false
     if (customer.legalOrganizationId.isNullOrBlank()) return false
     if (customer.tributeId.isBlank()) return false
-    if (customer.identificationDocumentId.isBlank()) return false
+    if (customer.identificationDocumentId == 0) return false
     if (customer.municipalityId.isBlank()) return false
 
     if (facture.items.isEmpty()) return false
@@ -807,7 +850,7 @@ fun updateCustomerData(
     phone: String? = null,
     legalOrganizationId: String? = null,
     tributeId: String? = null,
-    identificationDocumentId: String? = null,
+    identificationDocumentId: Int? = null,
     municipalityId: String? = null
 ) {
     customerData.value = customerData.value.copy(
@@ -844,7 +887,7 @@ fun updateFactureData(
         reference_code = referenceCode ?: customerData.value.reference_code,
         observation = observation ?: customerData.value.observation,
         payment_form = paymentForm ?: customerData.value.payment_form,
-        payment_due_date = paymentDueDate ?: customerData.value.payment_due_date,
+        payment_due_date = (paymentDueDate ?: customerData.value.payment_due_date).toString(),
         payment_method_code = paymentMethodCode ?: customerData.value.payment_method_code,
         billing_period = billingPeriod ?: customerData.value.billing_period,
         customer = customer ?: customerData.value.customer,
@@ -860,9 +903,9 @@ fun updateBillingData(
     endTime: String? = null
 ) {
     customerData.value = customerData.value.copy(
-        start_date = startDate ?: customerData.value.start_date,
+        start_date = (startDate ?: customerData.value.start_date).toString(),
         start_time = startTime ?: customerData.value.start_time,
-        end_date = endDate ?: customerData.value.end_date,
+        end_date = (endDate ?: customerData.value.end_date).toString(),
         end_time = endTime ?: customerData.value.end_time
     )
 }
@@ -940,9 +983,10 @@ private fun LevelText(text: String) {
 }
 
 @Composable
-private fun FieldName(dataValue: String?, dataOnChange: (String) -> Unit) {
+private fun FieldName(dataValue: String?, enabled: Boolean = true, dataOnChange: (String) -> Unit) {
     TextField(
         value = if (dataValue.isNullOrEmpty()) "" else dataValue,
+        enabled = enabled,
         singleLine = true,
         shape = RoundedCornerShape(8.dp),
         onValueChange = { dataOnChange(it) },

@@ -2,6 +2,7 @@ package com.factus.app.ui.facture
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.factus.app.domain.models.Facture
 import com.factus.app.domain.models.Location
 import com.factus.app.domain.models.Measurement
 import com.factus.app.domain.models.Numbering
@@ -30,11 +31,14 @@ class FactureViewModel @Inject constructor(
         MutableStateFlow<LoginResult<List<Location>>>(LoginResult.Loading(false))
     private val _tributesState =
         MutableStateFlow<LoginResult<List<Tribute>>>(LoginResult.Loading(false))
+    private val _factureState = MutableStateFlow<LoginResult<Facture>>(LoginResult.Loading(false))
 
     val numberingRangesState: StateFlow<LoginResult<List<Numbering>>> = _numberingRangesState
     val unitsMeasurementState: StateFlow<LoginResult<List<Measurement>>> = _unitsMeasurementState
     val locationsState: StateFlow<LoginResult<List<Location>>> = _locationsState
     val tributesState: StateFlow<LoginResult<List<Tribute>>> = _tributesState
+    val factureState: StateFlow<LoginResult<Facture>> = _factureState
+
 
     init {
         fetchNumberingRanges()
@@ -79,6 +83,13 @@ class FactureViewModel @Inject constructor(
     private fun fetchTributes() {
         handleRequest(
             request = { factureRepository.getTributes() }, stateFlow = _tributesState
+        )
+    }
+
+    fun createdFacture(facture: Facture) {
+        handleRequest(
+            request = { factureRepository.createFacture(facture.toDomain()) },
+            stateFlow = _factureState
         )
     }
 }

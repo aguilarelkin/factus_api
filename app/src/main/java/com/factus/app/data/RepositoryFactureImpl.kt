@@ -1,6 +1,8 @@
 package com.factus.app.data
 
 import com.factus.app.data.network.FactuApiService
+import com.factus.app.data.response.FactureResponse
+import com.factus.app.domain.models.Facture
 import com.factus.app.domain.models.Location
 import com.factus.app.domain.models.Measurement
 import com.factus.app.domain.models.Numbering
@@ -84,4 +86,13 @@ class RepositoryFactureImpl @Inject constructor(
         })
     }
 
+    override suspend fun createFacture(facture: FactureResponse): LoginResult<Facture> {
+        runCatching {
+            factuApiService.createdFacture(facture).data.toDomain()
+        }.fold(onSuccess = {
+            return LoginResult.Success(it)
+        }, onFailure = {
+            return LoginResult.Error(it.message  ?: "Unknown error")
+        })
+    }
 }

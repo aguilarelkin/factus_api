@@ -7,6 +7,7 @@ import com.factus.app.domain.models.Location
 import com.factus.app.domain.models.Measurement
 import com.factus.app.domain.models.Numbering
 import com.factus.app.domain.models.Tribute
+import com.factus.app.domain.models.invoice.FactureItem
 import com.factus.app.domain.repository.DataStoreRepository
 import com.factus.app.domain.repository.FactureRepository
 import com.factus.app.domain.state.LoginResult
@@ -96,9 +97,9 @@ class RepositoryFactureImpl @Inject constructor(
         })
     }
 
-    override suspend fun getInvoice(identification: String): LoginResult<List<Facture>> {
+    override suspend fun getInvoice(identification: String): LoginResult<List<FactureItem>> {
         runCatching {
-            factuApiService.getInvoice(identification).data.map { it.toDomain() }
+            factuApiService.getInvoice(identification).data.data.map { it.toDomainModel() }
         }.fold(onSuccess = {
             return LoginResult.Success(it)
         }, onFailure = {

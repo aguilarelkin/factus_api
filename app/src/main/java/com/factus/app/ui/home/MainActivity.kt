@@ -19,6 +19,7 @@ import androidx.navigation.compose.rememberNavController
 import com.factus.app.ui.facture.FactureScreen
 import com.factus.app.ui.facture.FactureViewModel
 import com.factus.app.ui.information.HomeScreen
+import com.factus.app.ui.information.HomeViewModel
 import com.factus.app.ui.login.Login
 import com.factus.app.ui.login.LoginViewModel
 import com.factus.app.ui.navigation.RouteFactus
@@ -57,7 +58,8 @@ class MainActivity : ComponentActivity() {
 
         NavHost(navController = navController, startDestination = RouteFactus.Login.route) {
             composable(route = RouteFactus.Home.route) {
-                HomeScreen(navController, modifier)
+                val homeViewModel = hiltViewModel<HomeViewModel>()
+                HomeScreen(homeViewModel, navController, modifier)
             }
             composable(route = RouteFactus.Login.route) {
                 Login(loginViewModel, navController, modifier)

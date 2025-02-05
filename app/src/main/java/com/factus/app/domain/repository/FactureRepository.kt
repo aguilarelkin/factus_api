@@ -6,6 +6,7 @@ import com.factus.app.domain.models.Location
 import com.factus.app.domain.models.Measurement
 import com.factus.app.domain.models.Numbering
 import com.factus.app.domain.models.Tribute
+import com.factus.app.domain.models.invoice.FactureItem
 import com.factus.app.domain.state.LoginResult
 
 interface FactureRepository {
@@ -14,5 +15,5 @@ interface FactureRepository {
     suspend fun getLocations(): LoginResult<List<Location>>
     suspend fun getTributes(): LoginResult<List<Tribute>>
     suspend fun createFacture(facture: FactureResponse): LoginResult<Facture>
-    suspend fun getInvoice(identification: String): LoginResult<List<Facture>>
+    suspend fun getInvoice(identification: String): LoginResult<List<FactureItem>>
 }

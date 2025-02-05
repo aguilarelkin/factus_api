@@ -7,24 +7,22 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.filled.ShoppingCart
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FloatingActionButton
-import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextField
 import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -34,20 +32,19 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavHostController
+import com.factus.app.domain.models.invoice.FactureItem
+import com.factus.app.domain.state.LoginResult
 import com.factus.app.ui.navigation.RouteFactus
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun HomeScreen(navController: NavHostController, modifier: Modifier) {
-    var query by remember { mutableStateOf("") }
-    var searchResults by remember { mutableStateOf<List<String>>(emptyList()) }
+fun HomeScreen(homeViewModel: HomeViewModel, navController: NavHostController, modifier: Modifier) {
+    val searchState by homeViewModel.factureState.collectAsState()
 
     Scaffold(modifier = Modifier.fillMaxSize(), topBar = {
         TopAppBar(title = {
             SearchBar { querys ->
-                query = querys
-                searchResults = performSearch(query)
-                println("Buscando: $query")
+                homeViewModel.getInvoice(querys)
             }
         })
     }, floatingActionButton = {
@@ -55,46 +52,35 @@ fun HomeScreen(navController: NavHostController, modifier: Modifier) {
             Icon(Icons.Default.ShoppingCart, contentDescription = "Facturar")
         }
     }) { innerPadding ->
+
         Column(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(innerPadding)
                 .padding(16.dp)
         ) {
-            if (searchResults.isNotEmpty()) {
-                LazyColumn {
-                    items(searchResults) { item ->
-                        Text(
-                            text = item,
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(vertical = 8.dp),
-                            style = MaterialTheme.typography.bodyLarge
-                        )
-                        HorizontalDivider()
+            when (searchState) {
+                is LoginResult.Error -> {
+                    val errorMessage = (searchState as LoginResult.Error<List<FactureItem>>).message
+                    Text(
+                        text = "Error: $errorMessage", color = Color.Red
+                    )
+                }
+
+                is LoginResult.Loading -> {
+                    val data = (searchState as LoginResult.Loading<*>).isLoading
+                    if (data) {
+                        CircularProgressIndicator()
                     }
                 }
-            } else {
-                Text(
-                    text = "No se encontraron resultados",
-                    style = MaterialTheme.typography.bodyMedium,
-                    modifier = Modifier.align(Alignment.CenterHorizontally)
-                )
+
+                is LoginResult.Success -> {
+                    val data = (searchState as LoginResult.Success<List<FactureItem>>).data
+                    Text(text = "Login exitoso: ${data}")
+                }
             }
+
         }
-    }
-}
-
-private fun performSearch(query: String): List<String> {
-
-    if (query.isBlank()) return emptyList()
-
-    val allData = listOf(
-        "Factura 001", "Factura 002", "Factura 003", "Factura 004", "Factura 005"
-    )
-
-    return allData.filter {
-        it.contains(query, ignoreCase = true)
     }
 }
 

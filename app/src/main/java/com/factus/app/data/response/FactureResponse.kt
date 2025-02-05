@@ -2,7 +2,6 @@ package com.factus.app.data.response
 
 import com.factus.app.domain.models.Facture
 import com.google.gson.annotations.SerializedName
-import java.time.LocalDate
 
 data class FactureResponse(
     @SerializedName("numbering_range_id") val numbering_range_id: Int = 0,

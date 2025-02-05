@@ -3,10 +3,12 @@ package com.factus.app.data.network
 import com.factus.app.data.response.ApiFactureResponse
 import com.factus.app.data.response.ApiResponse
 import com.factus.app.data.response.FactureResponse
+import com.factus.app.data.response.InvoiceResponse
 import com.factus.app.data.response.LocationResponse
 import com.factus.app.data.response.MeasurementResponse
 import com.factus.app.data.response.NumberingResponse
 import com.factus.app.data.response.TributeResponse
+import com.factus.app.data.response.invoiceitem.FactureItemResponse
 import retrofit2.http.Body
 import retrofit2.http.GET
 import retrofit2.http.POST
@@ -29,6 +31,6 @@ interface FactuApiService {
     @POST("/v1/bills/validate")
     suspend fun createdFacture(@Body facture: FactureResponse): ApiFactureResponse<FactureResponse>
 
-    @POST("/v1/bills")
-    suspend fun getInvoice(@Query("filter[identification]") identification: String): ApiResponse<FactureResponse>
+    @GET("/v1/bills")
+    suspend fun getInvoice(@Query("filter[identification]") identification: String): InvoiceResponse<FactureItemResponse>
 }

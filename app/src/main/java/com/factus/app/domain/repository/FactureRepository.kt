@@ -14,4 +14,5 @@ interface FactureRepository {
     suspend fun getLocations(): LoginResult<List<Location>>
     suspend fun getTributes(): LoginResult<List<Tribute>>
     suspend fun createFacture(facture: FactureResponse): LoginResult<Facture>
+    suspend fun getInvoice(identification: String): LoginResult<List<Facture>>
 }

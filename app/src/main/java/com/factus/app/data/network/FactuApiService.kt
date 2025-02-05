@@ -7,10 +7,10 @@ import com.factus.app.data.response.LocationResponse
 import com.factus.app.data.response.MeasurementResponse
 import com.factus.app.data.response.NumberingResponse
 import com.factus.app.data.response.TributeResponse
-import com.factus.app.domain.models.Facture
 import retrofit2.http.Body
 import retrofit2.http.GET
 import retrofit2.http.POST
+import retrofit2.http.Query
 
 interface FactuApiService {
 
@@ -29,4 +29,6 @@ interface FactuApiService {
     @POST("/v1/bills/validate")
     suspend fun createdFacture(@Body facture: FactureResponse): ApiFactureResponse<FactureResponse>
 
+    @POST("/v1/bills")
+    suspend fun getInvoice(@Query("filter[identification]") identification: String): ApiResponse<FactureResponse>
 }

@@ -92,7 +92,17 @@ class RepositoryFactureImpl @Inject constructor(
         }.fold(onSuccess = {
             return LoginResult.Success(it)
         }, onFailure = {
-            return LoginResult.Error(it.message  ?: "Unknown error")
+            return LoginResult.Error(it.message ?: "Unknown error")
+        })
+    }
+
+    override suspend fun getInvoice(identification: String): LoginResult<List<Facture>> {
+        runCatching {
+            factuApiService.getInvoice(identification).data.map { it.toDomain() }
+        }.fold(onSuccess = {
+            return LoginResult.Success(it)
+        }, onFailure = {
+            return LoginResult.Error(it.message ?: "Unknown error")
         })
     }
 }

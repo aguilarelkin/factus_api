@@ -2,18 +2,17 @@ package com.factus.app.ui.information
 
 import android.widget.Toast
 import androidx.compose.foundation.background
-import androidx.compose.foundation.border
-import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
-import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Check
@@ -21,6 +20,8 @@ import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.filled.Share
 import androidx.compose.material.icons.filled.ShoppingCart
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FloatingActionButton
@@ -44,10 +45,8 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import androidx.navigation.NavHostController
 import com.factus.app.domain.models.invoice.FactureItem
 import com.factus.app.domain.state.LoginResult
@@ -59,12 +58,13 @@ import java.io.File
 @Composable
 fun HomeScreen(homeViewModel: HomeViewModel, navController: NavHostController, modifier: Modifier) {
     val searchState by homeViewModel.factureState.collectAsState()
+    var query by remember { mutableStateOf("") }
 
     Scaffold(modifier = Modifier.fillMaxSize(), topBar = {
         TopAppBar(title = {
-            SearchBar { querys ->
-                homeViewModel.getInvoice(querys)
-            }
+            SearchBar(query = query,
+                onQueryChanged = { query = it },
+                onSearch = { homeViewModel.getInvoice(query) })
         })
     }, floatingActionButton = {
         FloatingActionButton(onClick = { navController.navigate(RouteFactus.Facture.route) }) {
@@ -80,23 +80,31 @@ fun HomeScreen(homeViewModel: HomeViewModel, navController: NavHostController, m
         ) {
             when (searchState) {
                 is LoginResult.Error -> {
-                    val errorMessage = (searchState as LoginResult.Error<List<FactureItem>>).message
-                    Text(
-                        text = "Error: $errorMessage", color = Color.Red
-                    )
+                    val errorMessage = searchState.message
+                    Box(
+                        modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center
+                    ) {
+                        Text(
+                            text = "Error: $errorMessage",
+                            color = MaterialTheme.colorScheme.error,
+                            style = MaterialTheme.typography.bodyLarge
+                        )
+                    }
                 }
 
                 is LoginResult.Loading -> {
-                    val data = (searchState as LoginResult.Loading<*>).isLoading
-                    if (data) {
-                        CircularProgressIndicator()
+                    if (searchState.isLoading) {
+                        Box(
+                            modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center
+                        ) {
+                            CircularProgressIndicator()
+                        }
                     }
                 }
 
                 is LoginResult.Success -> {
-                    val data = (searchState as LoginResult.Success<List<FactureItem>>).data
+                    val data = searchState.data
                     ListInvoice(data, homeViewModel)
-
                 }
             }
 
@@ -106,7 +114,7 @@ fun HomeScreen(homeViewModel: HomeViewModel, navController: NavHostController, m
 
 @Composable
 fun ListInvoice(data: List<FactureItem>?, homeViewModel: HomeViewModel) {
-    val downloadInvoive by homeViewModel.downloadState.collectAsState()
+    val downloadInvoiceState by homeViewModel.downloadState.collectAsState()
     val context = LocalContext.current
 
     LaunchedEffect(Unit) {
@@ -114,103 +122,112 @@ fun ListInvoice(data: List<FactureItem>?, homeViewModel: HomeViewModel) {
             Toast.makeText(context, mensaje, Toast.LENGTH_LONG).show()
         }
     }
-    LaunchedEffect(key1 = true) {
+    LaunchedEffect(Unit) {
         homeViewModel.pdfDownloadedEvent.collectLatest { (id, file) ->
             Toast.makeText(context, "PDF descargado: ${file.name}", Toast.LENGTH_SHORT).show()
             homeViewModel.openPdf(context, file)
         }
     }
-    when (downloadInvoive) {
+    when (downloadInvoiceState) {
         is LoginResult.Error -> {
-            val message = (downloadInvoive as LoginResult.Error<File>).message
+            val message = (downloadInvoiceState as LoginResult.Error<File>).message
             Toast.makeText(context, "Error: $message", Toast.LENGTH_LONG).show()
         }
 
         is LoginResult.Loading -> {
-            val data = (downloadInvoive as LoginResult.Loading<*>).isLoading
-            if (data) {
-                CircularProgressIndicator()
+            if ((downloadInvoiceState as LoginResult.Loading<*>).isLoading) {
+                Box(
+                    modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center
+                ) {
+                    CircularProgressIndicator()
+                }
             }
         }
 
         is LoginResult.Success -> {}
     }
-    LazyColumn {
-        if (!data.isNullOrEmpty()) {
+    if (data.isNullOrEmpty()) {
+        Box(
+            modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center
+        ) {
+            Text(
+                text = "No hay datos disponibles",
+                style = MaterialTheme.typography.titleLarge,
+                color = MaterialTheme.colorScheme.onSurface
+            )
+        }
+    } else {
+        LazyColumn(
+            verticalArrangement = Arrangement.spacedBy(8.dp), modifier = Modifier.fillMaxSize()
+        ) {
             itemsIndexed(data) { index, item ->
                 ItemInvoice(item, homeViewModel)
             }
-        } else {
-            item {
-                Box(
-                    modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center
+        }
+    }
+}
+
+
+@Composable
+fun ItemInvoice(item: FactureItem, homeViewModel: HomeViewModel) {
+    val context = LocalContext.current
+    var shareEnabled by rememberSaveable { mutableStateOf(false) }
+
+    Card(
+        shape = RoundedCornerShape(12.dp),
+        elevation = CardDefaults.cardElevation(defaultElevation = 4.dp),
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 8.dp)
+    ) {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(16.dp),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.SpaceBetween
+        ) {
+            Text(
+                text = item.number,
+                style = MaterialTheme.typography.bodyLarge.copy(fontWeight = FontWeight.Bold),
+                modifier = Modifier.weight(1f)
+            )
+            Spacer(modifier = Modifier.width(8.dp))
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+                StatusIndicator(item)
+
+                IconButton(onClick = {
+                    homeViewModel.downloadInvoice(item.number, context)
+                    shareEnabled = true
+                }) {
+                    Icon(
+                        imageVector = DownloadIcon,
+                        contentDescription = "Descargar",
+                        tint = MaterialTheme.colorScheme.primary
+                    )
+                }
+                IconButton(
+                    onClick = {
+                        if (item.fileUrl != null) {
+                            homeViewModel.sharePdf(context, item.fileUrl!!)
+                        } else {
+                            Toast.makeText(context, "No hay PDF para compartir", Toast.LENGTH_SHORT)
+                                .show()
+                        }
+                    }, enabled = shareEnabled
                 ) {
-                    Text(
-                        text = "No hay datos disponibles",
-                        style = MaterialTheme.typography.titleLarge,
-                        color = MaterialTheme.colorScheme.onSurface
+                    Icon(
+                        imageVector = Icons.Default.Share,
+                        contentDescription = "Compartir",
+                        tint = if (shareEnabled) Color.Green else MaterialTheme.colorScheme.onSurfaceVariant
                     )
                 }
             }
         }
     }
-
-}
-
-@Composable
-fun ItemInvoice(item: FactureItem, homeViewModel: HomeViewModel) {
-    val scrollState = rememberScrollState()
-    val context = LocalContext.current
-    val file by homeViewModel.downloadState.collectAsState()
-    var enabled by rememberSaveable { mutableStateOf(false) }
-
-    LaunchedEffect(file) {}
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .horizontalScroll(scrollState)
-            .padding(16.dp),
-        verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.SpaceBetween
-    ) {
-        Text(
-            text = item.number, style = TextStyle(
-                fontSize = 16.sp, fontWeight = FontWeight.Bold
-            )
-        )
-        Row(
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(8.dp)
-        ) {
-            StatusIndicator(item)
-
-            IconButton(onClick = {
-                homeViewModel.downloadInvoice(item.number, context)
-                enabled = true
-
-            }) {
-                Icon(
-                    imageVector = DownloadIcon, contentDescription = "Descargar", tint = Color.Blue
-                )
-            }
-
-            IconButton(onClick = {
-
-                if (item.fileUrl != null) {
-                    homeViewModel.sharePdf(context, item.fileUrl!!)
-                } else {
-                    Toast.makeText(context, "No hay PDF para compartir", Toast.LENGTH_SHORT).show()
-                }
-            }, enabled = enabled) {
-                Icon(
-                    imageVector = Icons.Default.Share,
-                    contentDescription = "Compartir",
-                    tint = if (enabled) Color.Green else Color.Gray
-                )
-            }
-        }
-    }
-
 }
 
 @Composable
@@ -227,44 +244,51 @@ fun StatusIndicator(item: FactureItem) {
 }
 
 @Composable
-fun SearchBar(onSearch: (String) -> Unit) {
-    var query by remember { mutableStateOf("") }
-    Row(
+fun SearchBar(query: String, onQueryChanged: (String) -> Unit, onSearch: (String) -> Unit) {
+    Card(
+        shape = RoundedCornerShape(16.dp),
+        elevation = CardDefaults.elevatedCardElevation(4.dp),
         modifier = Modifier
             .fillMaxWidth()
-            .padding(end = 8.dp)
-            .border(2.dp, Color.Blue, RoundedCornerShape(8.dp))
-            .background(Color.White, RoundedCornerShape(8.dp)),
-        verticalAlignment = Alignment.CenterVertically
+            .padding(horizontal = 16.dp)
     ) {
-        TextField(
-            value = query,
-            onValueChange = { query = it },
-            placeholder = { Text("Buscar...", color = Color.Gray) },
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
             modifier = Modifier
-                .weight(1f)
-                .padding(4.dp),
-            colors = TextFieldDefaults.colors(
-                focusedContainerColor = Color.White,
-                unfocusedContainerColor = Color.White,
-                disabledContainerColor = Color.White,
-                focusedTextColor = Color.Black,
-                unfocusedTextColor = Color.Black
-            ),
-            singleLine = true
-        )
-
-        IconButton(
-            onClick = { onSearch(query) },
-            modifier = Modifier
-                .background(Color.Blue, RoundedCornerShape(8.dp))
-                .padding(8.dp)
+                .background(MaterialTheme.colorScheme.surface)
+                .padding(horizontal = 16.dp)
         ) {
-            Icon(
-                imageVector = Icons.Default.Search,
-                contentDescription = "Buscar",
-                tint = Color.White
+            TextField(
+                value = query,
+                onValueChange = onQueryChanged,
+                placeholder = {
+                    Text(
+                        "Buscar...", color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
+                    )
+                },
+                modifier = Modifier
+                    .weight(1f)
+                    .background(Color.Transparent),
+                colors = TextFieldDefaults.colors(
+                    focusedContainerColor = MaterialTheme.colorScheme.surface,
+                    unfocusedContainerColor = MaterialTheme.colorScheme.surface,
+                    disabledContainerColor = MaterialTheme.colorScheme.surface,
+                    focusedTextColor = MaterialTheme.colorScheme.onSurface,
+                    unfocusedTextColor = MaterialTheme.colorScheme.onSurface,
+                    cursorColor = MaterialTheme.colorScheme.primary,
+                    focusedIndicatorColor = Color.Transparent,
+                    unfocusedIndicatorColor = Color.Transparent
+                ),
+                singleLine = true,
+                textStyle = MaterialTheme.typography.bodyLarge
             )
+            IconButton(onClick = { onSearch(query) }) {
+                Icon(
+                    imageVector = Icons.Default.Search,
+                    contentDescription = "Buscar",
+                    tint = MaterialTheme.colorScheme.primary
+                )
+            }
         }
     }
 }

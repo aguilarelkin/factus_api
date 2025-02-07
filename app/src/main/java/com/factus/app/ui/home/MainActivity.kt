@@ -17,7 +17,6 @@ import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
-import com.factus.app.ui.facture.FactureScreen
 import com.factus.app.ui.facture.FactureViewModel
 import com.factus.app.ui.information.HomeScreen
 import com.factus.app.ui.information.HomeViewModel
@@ -26,6 +25,7 @@ import com.factus.app.ui.login.LoginViewModel
 import com.factus.app.ui.navigation.RouteFactus
 import com.factus.app.ui.theme.FactusTheme
 import dagger.hilt.android.AndroidEntryPoint
+import ui.facture.FactureScreen
 
 @AndroidEntryPoint
 class MainActivity : ComponentActivity() {

@@ -1,7 +1,6 @@
 package com.factus.app.domain.models
 
 import com.factus.app.data.response.FactureResponse
-import java.time.LocalDate
 
 data class Facture(
     val numbering_range_id: Int = 0,

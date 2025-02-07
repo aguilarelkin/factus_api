@@ -1,5 +1,6 @@
 package com.factus.app.ui.home
 
+import android.content.Context
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
@@ -30,6 +31,7 @@ import dagger.hilt.android.AndroidEntryPoint
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        clearOldPdfs(this)
         enableEdgeToEdge()
         setContent {
             FactusTheme {
@@ -42,6 +44,16 @@ class MainActivity : ComponentActivity() {
                         Modifier.padding(innerPadding)
                     )
                 }
+            }
+        }
+    }
+
+    private fun clearOldPdfs(context: Context, maxAgeMillis: Long = 24 * 60 * 60 * 1000) {
+        val now = System.currentTimeMillis()
+        val cacheDir = context.cacheDir
+        cacheDir.listFiles()?.forEach { file ->
+            if (file.extension == "pdf" && now - file.lastModified() > maxAgeMillis) {
+                file.delete()
             }
         }
     }

@@ -425,7 +425,6 @@ fun DataFacture(
                         )
                     })
                 Spacer(modifier = Modifier.width(8.dp))
-                Text(customerData.value.identificationDocumentId.toString())
 
                 ListDropdown(
                     info = "ID DOCUMENTO",

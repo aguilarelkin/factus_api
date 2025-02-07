@@ -1,5 +1,6 @@
 package com.factus.app.ui.information
 
+import android.widget.Toast
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.horizontalScroll
@@ -32,14 +33,17 @@ import androidx.compose.material3.TextField
 import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -48,6 +52,8 @@ import androidx.navigation.NavHostController
 import com.factus.app.domain.models.invoice.FactureItem
 import com.factus.app.domain.state.LoginResult
 import com.factus.app.ui.navigation.RouteFactus
+import kotlinx.coroutines.flow.collectLatest
+import java.io.File
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -89,7 +95,7 @@ fun HomeScreen(homeViewModel: HomeViewModel, navController: NavHostController, m
 
                 is LoginResult.Success -> {
                     val data = (searchState as LoginResult.Success<List<FactureItem>>).data
-                    ListInvoice(data)
+                    ListInvoice(data, homeViewModel)
 
                 }
             }
@@ -99,12 +105,40 @@ fun HomeScreen(homeViewModel: HomeViewModel, navController: NavHostController, m
 }
 
 @Composable
-fun ListInvoice(data: List<FactureItem>?) {
+fun ListInvoice(data: List<FactureItem>?, homeViewModel: HomeViewModel) {
+    val downloadInvoive by homeViewModel.downloadState.collectAsState()
+    val context = LocalContext.current
 
+    LaunchedEffect(Unit) {
+        homeViewModel.toastMessage.collectLatest { mensaje ->
+            Toast.makeText(context, mensaje, Toast.LENGTH_LONG).show()
+        }
+    }
+    LaunchedEffect(key1 = true) {
+        homeViewModel.pdfDownloadedEvent.collectLatest { (id, file) ->
+            Toast.makeText(context, "PDF descargado: ${file.name}", Toast.LENGTH_SHORT).show()
+            homeViewModel.openPdf(context, file)
+        }
+    }
+    when (downloadInvoive) {
+        is LoginResult.Error -> {
+            val message = (downloadInvoive as LoginResult.Error<File>).message
+            Toast.makeText(context, "Error: $message", Toast.LENGTH_LONG).show()
+        }
+
+        is LoginResult.Loading -> {
+            val data = (downloadInvoive as LoginResult.Loading<*>).isLoading
+            if (data) {
+                CircularProgressIndicator()
+            }
+        }
+
+        is LoginResult.Success -> {}
+    }
     LazyColumn {
         if (!data.isNullOrEmpty()) {
             itemsIndexed(data) { index, item ->
-                ItemInvoice(item)
+                ItemInvoice(item, homeViewModel)
             }
         } else {
             item {
@@ -124,8 +158,13 @@ fun ListInvoice(data: List<FactureItem>?) {
 }
 
 @Composable
-fun ItemInvoice(item: FactureItem) {
+fun ItemInvoice(item: FactureItem, homeViewModel: HomeViewModel) {
     val scrollState = rememberScrollState()
+    val context = LocalContext.current
+    val file by homeViewModel.downloadState.collectAsState()
+    var enabled by rememberSaveable { mutableStateOf(false) }
+
+    LaunchedEffect(file) {}
     Row(
         modifier = Modifier
             .fillMaxWidth()
@@ -146,7 +185,9 @@ fun ItemInvoice(item: FactureItem) {
             StatusIndicator(item)
 
             IconButton(onClick = {
-                // Lógica para descargar
+                homeViewModel.downloadInvoice(item.number, context)
+                enabled = true
+
             }) {
                 Icon(
                     imageVector = DownloadIcon, contentDescription = "Descargar", tint = Color.Blue
@@ -154,16 +195,22 @@ fun ItemInvoice(item: FactureItem) {
             }
 
             IconButton(onClick = {
-                // Lógica para compartir
-            }) {
+
+                if (item.fileUrl != null) {
+                    homeViewModel.sharePdf(context, item.fileUrl!!)
+                } else {
+                    Toast.makeText(context, "No hay PDF para compartir", Toast.LENGTH_SHORT).show()
+                }
+            }, enabled = enabled) {
                 Icon(
                     imageVector = Icons.Default.Share,
                     contentDescription = "Compartir",
-                    tint = Color.Green
+                    tint = if (enabled) Color.Green else Color.Gray
                 )
             }
         }
     }
+
 }
 
 @Composable

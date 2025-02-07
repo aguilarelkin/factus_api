@@ -9,9 +9,12 @@ import com.factus.app.data.response.MeasurementResponse
 import com.factus.app.data.response.NumberingResponse
 import com.factus.app.data.response.TributeResponse
 import com.factus.app.data.response.invoiceitem.FactureItemResponse
+import com.factus.app.data.response.pdf.PdfResponse
+import retrofit2.Response
 import retrofit2.http.Body
 import retrofit2.http.GET
 import retrofit2.http.POST
+import retrofit2.http.Path
 import retrofit2.http.Query
 
 interface FactuApiService {
@@ -33,4 +36,7 @@ interface FactuApiService {
 
     @GET("/v1/bills")
     suspend fun getInvoice(@Query("filter[identification]") identification: String): InvoiceResponse<FactureItemResponse>
+
+    @GET("v1/bills/download-pdf/{number}")
+    suspend fun downloadPdf(@Path("number") number: String): PdfResponse
 }

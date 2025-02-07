@@ -1,5 +1,7 @@
 package com.factus.app.domain.models.invoice
 
+import java.io.File
+
 data class FactureItem(
     val id: Int,
     val document: Document?,
@@ -21,5 +23,6 @@ data class FactureItem(
     val paymentForm: PaymentForm?,
     val createdAt: String,
     val creditNotes: List<Any>?,
-    val debitNotes: List<Any>?
+    val debitNotes: List<Any>?,
+    var fileUrl :File? = null
 )

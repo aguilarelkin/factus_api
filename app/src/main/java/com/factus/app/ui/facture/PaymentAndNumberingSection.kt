@@ -1,11 +1,16 @@
 package com.factus.app.ui.facture
 
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.animateContentSize
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.MutableState
 import androidx.compose.ui.Modifier
@@ -27,56 +32,82 @@ fun PaymentAndNumberingSection(
     paymentMethods: List<PaymentMethodCode>,
     formatter: DateTimeFormatter
 ) {
-    Column(
+    val formPayments = getFormPayment()
+
+    Card(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(horizontal = 16.dp)
+            .padding(horizontal = 16.dp, vertical = 8.dp),
+        shape = RoundedCornerShape(12.dp),
+        elevation = CardDefaults.elevatedCardElevation(defaultElevation = 6.dp),
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant)
     ) {
-        Row(modifier = Modifier.fillMaxWidth()) {
-            if (factureData.value.payment_form == "2") {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(16.dp)
+                .animateContentSize(),
+            verticalArrangement = Arrangement.spacedBy(12.dp)
+        ) {
+
+            AnimatedVisibility(visible = factureData.value.payment_form == "2") {
                 FormDatePicker(label = "FECHA DE VENCIMIENTO",
                     value = factureData.value.payment_due_date ?: "",
-                    modifier = Modifier.weight(1f),
+                    modifier = Modifier.fillMaxWidth(),
                     onValueChange = { dateStr ->
-                        val parsedDate = LocalDate.parse(dateStr, formatter)
-                        factureData.value =
-                            factureData.value.copy(payment_due_date = parsedDate.toString())
+                        try {
+                            val parsedDate = LocalDate.parse(dateStr, formatter)
+                            factureData.value =
+                                factureData.value.copy(payment_due_date = parsedDate.toString())
+                        } catch (e: Exception) {
+                            // Manejo de error
+                        }
                     })
-                Spacer(modifier = Modifier.width(8.dp))
             }
+
             ListDropdown(label = "RANGO DE NUMERACIÓN",
                 items = numberingData,
                 selectedItem = numberingData.firstOrNull { it.id == factureData.value.numbering_range_id }
                     ?: Numbering(id = 0, document = "Selecciona un rango"),
                 itemToString = { it.document },
-                modifier = Modifier.weight(1f),
+                modifier = Modifier.fillMaxWidth(),
                 onItemSelected = { selected ->
                     factureData.value = factureData.value.copy(numbering_range_id = selected.id)
                 })
-        }
-        Row(modifier = Modifier.fillMaxWidth()) {
 
-            ListDropdown(label = "FORMA DE PAGO",
-                items = getFormPayment(),
-                selectedItem = getFormPayment().firstOrNull { it.id == factureData.value.payment_form.toIntOrNull() }
-                    ?: Payment(id = 0, name = "Selecciona"),
-                itemToString = { it.name },
-                modifier = Modifier.weight(1f),
-                onItemSelected = { selected ->
-                    factureData.value =
-                        factureData.value.copy(payment_form = selected.id.toString())
-                })
-            Spacer(modifier = Modifier.width(8.dp))
-            ListDropdown(label = "CÓDIGO DE PAGO",
-                items = paymentMethods,
-                selectedItem = paymentMethods.firstOrNull { it.code == factureData.value.payment_method_code.toIntOrNull() }
-                    ?: PaymentMethodCode(code = 0, description = "Selecciona"),
-                itemToString = { it.description },
-                modifier = Modifier.weight(1f),
-                onItemSelected = { selected ->
-                    factureData.value =
-                        factureData.value.copy(payment_method_code = selected.code.toString())
-                })
+            PaymentMethodSelectionRow(factureData, formPayments, paymentMethods)
         }
     }
 }
+
+@Composable
+fun PaymentMethodSelectionRow(
+    factureData: MutableState<Facture>,
+    formPayments: List<Payment>,
+    paymentMethods: List<PaymentMethodCode>
+) {
+    Row(
+        modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)
+    ) {
+        ListDropdown(label = "FORMA DE PAGO",
+            items = formPayments,
+            selectedItem = formPayments.firstOrNull { it.id == factureData.value.payment_form.toIntOrNull() }
+                ?: Payment(id = 0, name = "Selecciona"),
+            itemToString = { it.name },
+            modifier = Modifier.weight(1f),
+            onItemSelected = { selected ->
+                factureData.value = factureData.value.copy(payment_form = selected.id.toString())
+            })
+        ListDropdown(label = "CÓDIGO DE PAGO",
+            items = paymentMethods,
+            selectedItem = paymentMethods.firstOrNull { it.code == factureData.value.payment_method_code.toIntOrNull() }
+                ?: PaymentMethodCode(code = 0, description = "Selecciona"),
+            itemToString = { it.description },
+            modifier = Modifier.weight(1f),
+            onItemSelected = { selected ->
+                factureData.value =
+                    factureData.value.copy(payment_method_code = selected.code.toString())
+            })
+    }
+}
+

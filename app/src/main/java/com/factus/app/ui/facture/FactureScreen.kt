@@ -1,14 +1,20 @@
 package ui.facture
 
-import android.util.Log
 import android.widget.Toast
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.Crossfade
+import androidx.compose.animation.animateContentSize
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
-import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -21,7 +27,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
-import androidx.navigation.NavHostController
+import androidx.navigation.NavController
 import com.factus.app.domain.models.BillingPeriod
 import com.factus.app.domain.models.Customer
 import com.factus.app.domain.models.CustomerSaver
@@ -48,112 +54,100 @@ import java.time.format.DateTimeFormatter
 
 @Composable
 fun FactureScreen(
-    factureViewModel: FactureViewModel,
-    navController: NavHostController,
-    modifier: Modifier = Modifier
+    factureViewModel: FactureViewModel, navController: NavController, modifier: Modifier
 ) {
+    val numberingState by factureViewModel.numberingRangesState.collectAsState()
+    val factureState by factureViewModel.factureState.collectAsState()
+    val locationsState by factureViewModel.locationsState.collectAsState()
+
+    val customerData = rememberSaveable(stateSaver = CustomerSaver) { mutableStateOf(Customer()) }
+    val billingData = remember { mutableStateOf(BillingPeriod()) }
+    val factureData = remember { mutableStateOf(Facture()) }
+
+    val paymentMethods = getPaymentMethods()
+    val identificationDocuments = getIdentificationDocuments()
+    val organizations = getOrganizations()
+    val tributes = getTributes()
+    val productList = getProductList()
+
+    val formatter = DateTimeFormatter.ofPattern("d/M/yyyy")
+    val context = LocalContext.current
+
     Scaffold(topBar = { FactureTopBar(onBackClick = { navController.popBackStack() }) }) { innerPadding ->
-        val numberingState by factureViewModel.numberingRangesState.collectAsState()
-        val factureState by factureViewModel.factureState.collectAsState()
-        val locationsState by factureViewModel.locationsState.collectAsState()
-
-        val customerData =
-            rememberSaveable(stateSaver = CustomerSaver) { mutableStateOf(Customer()) }
-        val billingData = remember { mutableStateOf(BillingPeriod()) }
-        val factureData = remember { mutableStateOf(Facture()) }
-
-        val paymentMethods = getPaymentMethods()
-        val identificationDocuments = getIdentificationDocuments()
-        val organizations = getOrganizations()
-        val tributes = getTributes()
-        val productList = getProductList()
-
-        val formatter = DateTimeFormatter.ofPattern("d/M/yyyy")
-        val context = LocalContext.current
-
-        LazyColumn(
-            contentPadding = innerPadding,
-            horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.spacedBy(8.dp),
-            modifier = Modifier.fillMaxSize()
+        Column(
+            modifier = Modifier
+                .padding(innerPadding)
+                .fillMaxSize()
         ) {
-            item { HeaderSection(factureData) }
+            val isLoading = (factureState as? LoginResult.Loading<*>)?.isLoading ?: false
 
-            item {
-                PaymentAndNumberingSection(
-                    factureData = factureData,
-                    numberingData = numberingState.data ?: emptyList(),
-                    paymentMethods = paymentMethods,
-                    formatter = formatter
-                )
+            AnimatedVisibility(visible = isLoading) {
+                LinearProgressIndicator(modifier = Modifier.fillMaxWidth())
             }
 
-            item { BillingSection(billingData, formatter) }
-
-            item {
-                FactureObservationSection(factureData = factureData)
-            }
-
-            item {
-                CustomerSection(
-                    customerData = customerData,
-                    identificationDocuments = identificationDocuments,
-                    organizations = organizations,
-                    tributes = tributes,
-                    locations = locationsState.data ?: emptyList()
-                )
-            }
-
-            items(productList) { product ->
-                ProductItem(product = product)
-            }
-
-            when (factureState) {
-                is LoginResult.Error -> {
-                    val errorMessage = (factureState as LoginResult.Error<*>).message
-                    item { ErrorText(message = "Error: $errorMessage") }
+            LazyColumn(
+                contentPadding = PaddingValues(16.dp),
+                horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.spacedBy(8.dp),
+                modifier = Modifier
+                    .fillMaxSize()
+                    .animateContentSize()
+            ) {
+                item { HeaderSection(factureData) }
+                item {
+                    PaymentAndNumberingSection(
+                        factureData, numberingState.data ?: emptyList(), paymentMethods, formatter
+                    )
                 }
-
-                is LoginResult.Loading -> {
-                    val isLoading = (factureState as LoginResult.Loading<*>).isLoading
-                    if (isLoading) item { CircularProgressIndicator() }
+                item { BillingSection(billingData, formatter) }
+                item { FactureObservationSection(factureData) }
+                item {
+                    CustomerSection(
+                        customerData,
+                        identificationDocuments,
+                        organizations,
+                        tributes,
+                        locationsState.data ?: emptyList()
+                    )
                 }
+                items(productList) { product -> ProductItem(product) }
+                item {
+                    Crossfade(targetState = factureState, label = "") { state ->
+                        when (state) {
+                            is LoginResult.Error -> ErrorText("Error: ${'$'}{state.message}")
+                            is LoginResult.Success -> {
+                                LaunchedEffect(Unit) {
+                                    Toast.makeText(
+                                        context, "Factura creada exitosamente", Toast.LENGTH_SHORT
+                                    ).show()
+                                    navController.popBackStack()
+                                }
+                            }
 
-                is LoginResult.Success -> {
-                    item {
-                        LaunchedEffect(Unit) {
-                            Toast.makeText(
-                                context, "Factura creada exitosamente", Toast.LENGTH_SHORT
-                            ).show()
-                            navController.popBackStack()
+                            else -> Unit
                         }
                     }
                 }
-            }
-
-            item {
-                Spacer(modifier = Modifier.height(16.dp))
-                ActionButton(enabled = true, onClick = {
-                    factureData.value = factureData.value.copy(
-                        customer = customerData.value,
-                        billing_period = billingData.value,
-                        items = productList
-                    )
-                    Log.e("adfa", factureData.value.toString())
-                    val isValid =
-                        validateCustomerData(factureData.value) && isValidFacture(factureData.value)
-                    if (isValid) {
-                        factureViewModel.createdFacture(factureData.value)
-
-                    } else {
-                        Toast.makeText(
-                            context,
-                            "¡Por favor, complete todos los campos necesarios!",
-                            Toast.LENGTH_SHORT
-                        ).show()
-                    }
-                })
-                Spacer(modifier = Modifier.height(16.dp))
+                item {
+                    Spacer(modifier = Modifier.height(16.dp))
+                    ActionButton(enabled = true, onClick = {
+                        factureData.value = factureData.value.copy(
+                            customer = customerData.value,
+                            billing_period = billingData.value,
+                            items = productList
+                        )
+                        if (validateCustomerData(factureData.value) && isValidFacture(factureData.value)) {
+                            factureViewModel.createdFacture(factureData.value)
+                        } else {
+                            Toast.makeText(
+                                context,
+                                "¡Por favor, complete todos los campos!",
+                                Toast.LENGTH_SHORT
+                            ).show()
+                        }
+                    })
+                    Spacer(modifier = Modifier.height(16.dp))
+                }
             }
         }
     }

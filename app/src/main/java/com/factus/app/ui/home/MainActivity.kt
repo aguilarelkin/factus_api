@@ -26,7 +26,7 @@ import com.factus.app.ui.login.LoginViewModel
 import com.factus.app.ui.navigation.RouteFactus
 import com.factus.app.ui.theme.FactusTheme
 import dagger.hilt.android.AndroidEntryPoint
-import ui.facture.FactureScreen
+import com.factus.app.ui.facture.FactureScreen
 
 @AndroidEntryPoint
 class MainActivity : ComponentActivity() {

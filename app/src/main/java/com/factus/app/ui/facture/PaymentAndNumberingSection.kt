@@ -12,13 +12,13 @@ import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.MutableState
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import com.factus.app.domain.models.Facture
 import com.factus.app.domain.models.Numbering
 import com.factus.app.domain.models.Payment
 import com.factus.app.domain.models.PaymentMethodCode
-import com.factus.app.ui.facture.util.components.FormDatePicker
 import com.factus.app.ui.facture.util.components.ListDropdown
 import com.factus.app.ui.facture.util.list.getFormPayment
 import java.time.LocalDate
@@ -49,18 +49,23 @@ fun PaymentAndNumberingSection(
         ) {
 
             AnimatedVisibility(visible = factureData.value.payment_form == "2") {
-                FormDatePicker(label = "FECHA DE VENCIMIENTO",
-                    value = factureData.value.payment_due_date ?: "",
+                Column(
                     modifier = Modifier.fillMaxWidth(),
-                    onValueChange = { dateStr ->
-                        try {
-                            val parsedDate = LocalDate.parse(dateStr, formatter)
-                            factureData.value =
-                                factureData.value.copy(payment_due_date = parsedDate.toString())
-                        } catch (e: Exception) {
-                            // Manejo de error
-                        }
-                    })
+                    horizontalAlignment = Alignment.CenterHorizontally
+                ) {
+                    DatePickerField(label = "FECHA DE VENCIMIENTO",
+                        selectedDate = factureData.value.payment_due_date ?: "",
+                        onDateSelected = { dateStr ->
+                            try {
+                                val parsedDate = LocalDate.parse(dateStr, formatter)
+                                factureData.value =
+                                    factureData.value.copy(payment_due_date = parsedDate.toString())
+                            } catch (e: Exception) {
+                                // Manejo de error
+                            }
+                        })
+                }
+
             }
 
             ListDropdown(label = "RANGO DE NUMERACIÓN",

@@ -17,9 +17,7 @@ import com.factus.app.ui.theme.CustomFont
 fun FactureTopBar(onBackClick: () -> Unit) {
     CenterAlignedTopAppBar(title = {
         Text(
-            text = "Factus",
-            fontFamily = CustomFont,
-            color = Color(0xFF424242)
+            text = "Factus", fontFamily = CustomFont, color = Color(0xFF424242)
         )
     }, navigationIcon = {
         IconButton(onClick = onBackClick) {

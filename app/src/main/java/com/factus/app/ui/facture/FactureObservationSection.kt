@@ -35,8 +35,7 @@ fun FactureObservationSection(factureData: MutableState<Facture>) {
             verticalArrangement = Arrangement.spacedBy(8.dp)
         ) {
             Text(
-                text = "OBSERVACIÓN",
-                color = MaterialTheme.colorScheme.onSurface
+                text = "OBSERVACIÓN", color = MaterialTheme.colorScheme.onSurface
             )
             OutlinedTextField(
                 value = factureData.value.observation,

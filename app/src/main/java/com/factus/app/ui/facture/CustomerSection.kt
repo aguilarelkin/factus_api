@@ -21,8 +21,8 @@ import com.factus.app.domain.models.IdentificationDocument
 import com.factus.app.domain.models.LegalOrganization
 import com.factus.app.domain.models.Location
 import com.factus.app.domain.models.TributeClient
-import com.factus.app.ui.facture.util.components.FormColumn
-import com.factus.app.ui.facture.util.components.FormSection
+import com.factus.app.ui.facture.util.components.FieldName
+import com.factus.app.ui.facture.util.components.LevelText
 import com.factus.app.ui.facture.util.components.ListDropdown
 
 @Composable
@@ -66,12 +66,13 @@ fun IdentificationRow(
         horizontalArrangement = Arrangement.spacedBy(2.dp),
         verticalAlignment = Alignment.Bottom
     ) {
-        FormColumn(
-            label = "IDENTIFICACIÓN",
-            value = customerData.value.identification,
+        Column(
             modifier = Modifier.weight(1f)
-        ) { newId ->
-            customerData.value = customerData.value.copy(identification = newId)
+        ) {
+            LevelText(text = "IDENTIFICACIÓN")
+            FieldName(dataValue = customerData.value.identification, onValueChange = { newId ->
+                customerData.value = customerData.value.copy(identification = newId)
+            })
         }
         ListDropdown(label = "ID DOCUMENTO",
             items = identificationDocuments,
@@ -89,16 +90,26 @@ fun IdentificationRow(
 fun NameAndAddressSection(
     customerData: MutableState<Customer>
 ) {
-    FormSection(label1 = "NOMBRE",
-        value1 = customerData.value.names,
-        onValueChange1 = { newName ->
-            customerData.value = customerData.value.copy(names = newName)
-        },
-        label2 = "DIRECCIÓN",
-        value2 = customerData.value.address,
-        onValueChange2 = { newAddress ->
-            customerData.value = customerData.value.copy(address = newAddress)
-        })
+    Row(modifier = Modifier.fillMaxWidth()) {
+        Column(
+            modifier = Modifier.weight(1f),
+        ) {
+            LevelText(text = "NOMBRE")
+            FieldName(dataValue = customerData.value.names ?: "", onValueChange = { newName ->
+                customerData.value = customerData.value.copy(names = newName)
+            })
+        }
+        Spacer(modifier = Modifier.width(8.dp))
+        Column(
+            modifier = Modifier.weight(1f),
+        ) {
+            LevelText(text = "DIRECCIÓN")
+            FieldName(dataValue = customerData.value.address ?: "", onValueChange = { newAddress ->
+                customerData.value = customerData.value.copy(address = newAddress)
+            })
+        }
+    }
+
 }
 
 @Composable
@@ -109,21 +120,25 @@ fun CompanyAndTradeNameRow(
         modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)
     ) {
         if (customerData.value.legalOrganizationId == "1") {
-            FormColumn(
-                label = "EMPRESA",
-                value = customerData.value.company,
-                modifier = Modifier.weight(1f)
-            ) { newCompany ->
-                customerData.value = customerData.value.copy(company = newCompany)
+            Column(
+                modifier = Modifier.weight(1f),
+            ) {
+                LevelText(text = "EMPRESA")
+                FieldName(dataValue = customerData.value.company ?: "",
+                    onValueChange = { newCompany ->
+                        customerData.value = customerData.value.copy(company = newCompany)
+                    })
             }
             Spacer(modifier = Modifier.width(8.dp))
         }
-        FormColumn(
-            label = "NOMBRE COMERCIAL",
-            value = customerData.value.tradeName,
-            modifier = Modifier.weight(1f)
-        ) { newTradeName ->
-            customerData.value = customerData.value.copy(tradeName = newTradeName)
+        Column(
+            modifier = Modifier.weight(1f),
+        ) {
+            LevelText(text = "NOMBRE COMERCIAL")
+            FieldName(dataValue = customerData.value.tradeName ?: "",
+                onValueChange = { newTradeName ->
+                    customerData.value = customerData.value.copy(tradeName = newTradeName)
+                })
         }
     }
 }
@@ -132,11 +147,25 @@ fun CompanyAndTradeNameRow(
 fun ContactSection(
     customerData: MutableState<Customer>
 ) {
-    FormSection(label1 = "EMAIL", value1 = customerData.value.email, onValueChange1 = { newEmail ->
-        customerData.value = customerData.value.copy(email = newEmail)
-    }, label2 = "TELÉFONO", value2 = customerData.value.phone, onValueChange2 = { newPhone ->
-        customerData.value = customerData.value.copy(phone = newPhone)
-    })
+    Row(modifier = Modifier.fillMaxWidth()) {
+        Column(
+            modifier = Modifier.weight(1f),
+        ) {
+            LevelText(text = "EMAIL")
+            FieldName(dataValue = customerData.value.email ?: "", onValueChange = { newEmail ->
+                customerData.value = customerData.value.copy(email = newEmail)
+            })
+        }
+        Spacer(modifier = Modifier.width(8.dp))
+        Column(
+            modifier = Modifier.weight(1f),
+        ) {
+            LevelText(text = "TELÉFONO")
+            FieldName(dataValue = customerData.value.phone ?: "", onValueChange = { newPhone ->
+                customerData.value = customerData.value.copy(phone = newPhone)
+            })
+        }
+    }
 }
 
 @Composable
@@ -144,7 +173,9 @@ fun OrganizationAndDvRow(
     customerData: MutableState<Customer>, organizations: List<LegalOrganization>
 ) {
     Row(
-        modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)
+        modifier = Modifier.fillMaxWidth(),
+        horizontalArrangement = Arrangement.spacedBy(8.dp),
+        verticalAlignment = Alignment.Bottom
     ) {
         ListDropdown(label = "ORGANIZACIÓN LEGAL",
             items = organizations,
@@ -158,10 +189,13 @@ fun OrganizationAndDvRow(
         }
         Spacer(modifier = Modifier.width(8.dp))
         if (customerData.value.identificationDocumentId == 10 || customerData.value.identificationDocumentId == 6) {
-            FormColumn(
-                label = "DV", value = customerData.value.dv, modifier = Modifier.weight(1f)
-            ) { newDv ->
-                customerData.value = customerData.value.copy(dv = newDv)
+            Column(
+                modifier = Modifier.weight(1f),
+            ) {
+                LevelText(text = "DV")
+                FieldName(dataValue = customerData.value.dv ?: "", onValueChange = { newDv ->
+                    customerData.value = customerData.value.copy(dv = newDv)
+                })
             }
         }
     }

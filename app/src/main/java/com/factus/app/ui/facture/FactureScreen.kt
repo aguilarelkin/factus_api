@@ -1,4 +1,4 @@
-package ui.facture
+package com.factus.app.ui.facture
 
 import android.widget.Toast
 import androidx.compose.animation.AnimatedVisibility
@@ -36,14 +36,6 @@ import com.factus.app.domain.models.Customer
 import com.factus.app.domain.models.CustomerSaver
 import com.factus.app.domain.models.Facture
 import com.factus.app.domain.state.LoginResult
-import com.factus.app.ui.facture.BillingSection
-import com.factus.app.ui.facture.CustomerSection
-import com.factus.app.ui.facture.FactureObservationSection
-import com.factus.app.ui.facture.FactureTopBar
-import com.factus.app.ui.facture.FactureViewModel
-import com.factus.app.ui.facture.HeaderSection
-import com.factus.app.ui.facture.PaymentAndNumberingSection
-import com.factus.app.ui.facture.ProductItem
 import com.factus.app.ui.facture.util.components.ActionButton
 import com.factus.app.ui.facture.util.components.ErrorText
 import com.factus.app.ui.facture.util.list.getIdentificationDocuments
@@ -140,7 +132,7 @@ fun FactureScreen(
                 item {
                     Crossfade(targetState = factureState, label = "") { state ->
                         when (state) {
-                            is LoginResult.Error -> ErrorText("Error: ${'$'}{state.message}")
+                            is LoginResult.Error -> ErrorText("Error: ${state.message}")
                             is LoginResult.Success -> {
                                 LaunchedEffect(Unit) {
                                     Toast.makeText(

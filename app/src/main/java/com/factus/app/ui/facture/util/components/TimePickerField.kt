@@ -4,8 +4,6 @@ import android.app.TimePickerDialog
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -50,7 +48,7 @@ fun TimePickerField(
             .clickable { openDialog = true },
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        Text(text = label)
-        Text(text = selectedTime ?: "", style = MaterialTheme.typography.bodyLarge)
+        LevelText(text = label)
+        FieldName(dataValue = selectedTime ?: "", enabled = false, onValueChange = {})
     }
 }

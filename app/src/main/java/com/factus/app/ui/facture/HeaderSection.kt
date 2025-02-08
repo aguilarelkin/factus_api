@@ -44,15 +44,12 @@ fun HeaderSection(factureData: MutableState<Facture>) {
             verticalAlignment = Alignment.CenterVertically
         ) {
             Text(
-                text = "Referencia:",
-                style = MaterialTheme.typography.titleMedium,
-                color = MaterialTheme.colorScheme.onSurface
+                text = "Referencia:", color = MaterialTheme.colorScheme.onSurface
             )
 
             AnimatedContent(targetState = referenceCode, label = "Reference Animation") { code ->
                 Text(
                     text = code,
-                    style = MaterialTheme.typography.titleMedium,
                     fontWeight = FontWeight.Bold,
                     color = MaterialTheme.colorScheme.primary
                 )

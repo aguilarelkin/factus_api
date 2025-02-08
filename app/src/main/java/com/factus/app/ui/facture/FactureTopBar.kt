@@ -6,11 +6,11 @@ import androidx.compose.material3.CenterAlignedTopAppBar
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.graphics.Color
+import com.factus.app.ui.theme.CustomFont
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -18,8 +18,8 @@ fun FactureTopBar(onBackClick: () -> Unit) {
     CenterAlignedTopAppBar(title = {
         Text(
             text = "Factus",
-            style = MaterialTheme.typography.titleLarge,
-            color = Color(0xFF424242) // Gris oscuro para contraste
+            fontFamily = CustomFont,
+            color = Color(0xFF424242)
         )
     }, navigationIcon = {
         IconButton(onClick = onBackClick) {

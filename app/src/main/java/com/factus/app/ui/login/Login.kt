@@ -143,7 +143,7 @@ fun Login(loginViewModel: LoginViewModel, navController: NavHostController, modi
             } else {
                 Text(
                     text = "Iniciar Sesión",
-                    style = MaterialTheme.typography.labelLarge,
+                    style = MaterialTheme.typography.bodyLarge,
                     fontSize = 18.sp,
                     modifier = Modifier.padding(horizontal = 16.dp)
                 )

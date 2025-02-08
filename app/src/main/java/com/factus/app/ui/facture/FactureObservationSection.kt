@@ -25,7 +25,7 @@ fun FactureObservationSection(factureData: MutableState<Facture>) {
         elevation = CardDefaults.cardElevation(defaultElevation = 4.dp),
         modifier = Modifier
             .fillMaxWidth()
-            .padding(horizontal = 16.dp, vertical = 8.dp)
+            .padding(horizontal = 8.dp, vertical = 8.dp)
             .animateContentSize()
     ) {
         Column(
@@ -36,7 +36,6 @@ fun FactureObservationSection(factureData: MutableState<Facture>) {
         ) {
             Text(
                 text = "OBSERVACIÓN",
-                style = MaterialTheme.typography.titleMedium,
                 color = MaterialTheme.colorScheme.onSurface
             )
             OutlinedTextField(
@@ -46,7 +45,6 @@ fun FactureObservationSection(factureData: MutableState<Facture>) {
                 },
                 modifier = Modifier.fillMaxWidth(),
                 placeholder = { Text(text = "Ingresa una observación") },
-                textStyle = MaterialTheme.typography.bodyLarge,
                 colors = TextFieldDefaults.colors(
                     focusedContainerColor = Color.Transparent,
                     unfocusedContainerColor = Color.Transparent,

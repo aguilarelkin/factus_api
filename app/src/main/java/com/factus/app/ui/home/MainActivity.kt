@@ -8,6 +8,7 @@ import androidx.activity.enableEdgeToEdge
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.systemBarsPadding
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
@@ -35,15 +36,20 @@ class MainActivity : ComponentActivity() {
         enableEdgeToEdge()
         setContent {
             FactusTheme {
-                Scaffold(
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .systemBarsPadding()
-                ) { innerPadding ->
-                    MainNavigation(
-                        Modifier.padding(innerPadding)
-                    )
+                MaterialTheme(
+                    typography = MaterialTheme.typography
+                ) {
+                    Scaffold(
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .systemBarsPadding()
+                    ) { innerPadding ->
+                        MainNavigation(
+                            Modifier.padding(innerPadding)
+                        )
+                    }
                 }
+
             }
         }
     }

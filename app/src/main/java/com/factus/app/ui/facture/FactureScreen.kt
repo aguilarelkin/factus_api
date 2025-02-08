@@ -6,7 +6,6 @@ import androidx.compose.animation.Crossfade
 import androidx.compose.animation.animateContentSize
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -15,7 +14,9 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.LinearProgressIndicator
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
@@ -26,7 +27,9 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import com.factus.app.domain.models.BillingPeriod
 import com.factus.app.domain.models.Customer
@@ -86,7 +89,6 @@ fun FactureScreen(
             }
 
             LazyColumn(
-                contentPadding = PaddingValues(16.dp),
                 horizontalAlignment = Alignment.CenterHorizontally,
                 verticalArrangement = Arrangement.spacedBy(8.dp),
                 modifier = Modifier
@@ -102,12 +104,36 @@ fun FactureScreen(
                 item { BillingSection(billingData, formatter) }
                 item { FactureObservationSection(factureData) }
                 item {
+                    Text(
+                        text = "Cliente",
+                        modifier = modifier
+                            .fillMaxWidth()
+                            .padding(vertical = 4.dp),
+                        textAlign = TextAlign.Center,
+                        fontSize = 20.sp,
+                        style = MaterialTheme.typography.titleSmall,
+                        color = MaterialTheme.colorScheme.onBackground
+                    )
+                }
+                item {
                     CustomerSection(
                         customerData,
                         identificationDocuments,
                         organizations,
                         tributes,
                         locationsState.data ?: emptyList()
+                    )
+                }
+                item {
+                    Text(
+                        text = "Productos",
+                        modifier = modifier
+                            .fillMaxWidth()
+                            .padding(vertical = 8.dp),
+                        textAlign = TextAlign.Center,
+                        fontSize = 20.sp,
+                        style = MaterialTheme.typography.titleSmall,
+                        color = MaterialTheme.colorScheme.onBackground
                     )
                 }
                 items(productList) { product -> ProductItem(product) }
@@ -130,7 +156,7 @@ fun FactureScreen(
                 }
                 item {
                     Spacer(modifier = Modifier.height(16.dp))
-                    ActionButton(enabled = true, onClick = {
+                    ActionButton(enabled = !isLoading, onClick = {
                         factureData.value = factureData.value.copy(
                             customer = customerData.value,
                             billing_period = billingData.value,

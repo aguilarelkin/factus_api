@@ -2,7 +2,6 @@
 
 **Factus** es una aplicación Android desarrollada en **Kotlin** que permite la gestión eficiente de facturación electrónica, clientes, productos y tributos. Diseñada con **Jetpack Compose** para una experiencia UI moderna, y potenciada con **Dagger Hilt**, **Retrofit** y **DataStore** para un rendimiento óptimo, modularidad y seguridad.
 
-> Conecta con la API oficial [Factus API](https://github.com/aguilarelkin/factus_api) para todo el manejo backend.  
 > ¡Facturación más simple, desde tu bolsillo!
 
 ---
@@ -21,7 +20,7 @@
 ---
 
 ## 🧱 Estructura del Proyecto
-
+```text
 📦 app/
 ├── 📁 data/        → Repositorios, modelos DTO, servicios de red
 ├── 📁 domain/      → Modelos de dominio, interfaces de repositorio, casos de uso
@@ -30,7 +29,7 @@
 ├── 📁 utils/       → Utilidades y helpers comunes
 ├── 📁 res/         → Recursos: strings, estilos, temas, íconos
 └── 📝 AndroidManifest.xml
-
+```
 
 ## 🔧 Requisitos
 - Android Studio Flamingo o superior
